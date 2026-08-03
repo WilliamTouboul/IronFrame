@@ -1,0 +1,59 @@
+/**
+ * Ironframe — allègement de l'admin pour le rôle client.
+ *
+ * Uniquement du masquage cosmétique. Les vraies restrictions sont dans
+ * inc/client/role.php (capacités) et inc/client/restrictions.php (verrous à
+ * l'enregistrement) : ce fichier ne fait que retirer de la vue ce qui, de
+ * toute façon, ne serait pas enregistré.
+ */
+
+/* Le permalien est figé côté serveur : le bouton « Modifier » ne ferait rien. */
+#edit-slug-box .edit-slug,
+#edit-slug-box #view-post-btn {
+    display: none;
+}
+
+/* Nagware et notices d'upsell des plugins tiers. */
+.update-nag,
+.notice-warning.is-dismissible[class*="upgrade"] {
+    display: none;
+}
+
+/* Pied de page admin : version de WordPress et remerciements. */
+#wpfooter {
+    display: none;
+}
+
+/* Boîte d'enregistrement de remplacement. */
+.iron-publish__hint {
+    margin: 0 0 12px;
+}
+
+.iron-publish .button {
+    width: 100%;
+    text-align: center;
+}
+
+/* Tableau de bord : liste des pages. */
+.iron-dashboard-pages {
+    margin: 0;
+}
+
+.iron-dashboard-pages li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.iron-dashboard-pages li:last-child {
+    border-bottom: 0;
+}
+
+.iron-dashboard-pages__view {
+    flex: none;
+    color: #646970;
+    font-size: 12px;
+}

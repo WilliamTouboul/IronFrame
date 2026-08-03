@@ -1,0 +1,19 @@
+# Ironframe — le dépôt ne contient que le thème, qui est le produit.
+# L'installation WordPress autour est un environnement de test jetable.
+
+# Systèmes de fichiers
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs
+.idea/
+.vscode/
+*.sublime-workspace
+*.code-workspace
+
+# Sauvegardes et temporaires
+*.bak
+*.orig
+*.log
+*~

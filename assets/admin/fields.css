@@ -1,0 +1,80 @@
+/**
+ * Ironframe — mise en forme des meta boxes de champs.
+ *
+ * Volontairement minimale : on prolonge l'admin WordPress, on ne le
+ * réinvente pas. Un client qui reconnaît son admin pose moins de questions.
+ */
+
+.iron-field {
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.iron-field:first-child {
+    padding-top: 4px;
+}
+
+.iron-field:last-child {
+    padding-bottom: 4px;
+    border-bottom: 0;
+}
+
+.iron-field__label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.iron-field__desc {
+    margin: 6px 0 0;
+}
+
+/* Image ------------------------------------------------------------------ */
+
+.iron-image__preview:empty {
+    display: none;
+}
+
+.iron-image__preview {
+    margin-bottom: 10px;
+    padding: 6px;
+    max-width: 320px;
+    border: 1px solid #dcdcde;
+    border-radius: 2px;
+    background: #fff;
+}
+
+.iron-image__preview img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.iron-image__actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 0;
+}
+
+.iron-image__actions .button-link-delete[disabled] {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* Lien ------------------------------------------------------------------- */
+
+.iron-link__row {
+    margin: 0 0 10px;
+}
+
+.iron-link__row:last-child {
+    margin-bottom: 0;
+}
+
+.iron-link__row label {
+    display: block;
+    margin-bottom: 4px;
+    color: #50575e;
+    font-size: 12px;
+}
