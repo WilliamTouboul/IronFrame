@@ -26,6 +26,7 @@ if (!function_exists('iron_client_allowed_menus')) {
         return apply_filters('iron_client_allowed_menus', [
             'index.php',                // Tableau de bord
             'edit.php?post_type=page',  // Pages
+            IRON_OPTIONS_PAGE,          // Réglages du site (Brique 6)
             'upload.php',               // Médias
             'profile.php',              // Son propre compte
         ]);

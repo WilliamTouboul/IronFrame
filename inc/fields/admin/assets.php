@@ -11,27 +11,15 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('iron_admin_enqueue_field_assets')) {
+if (!function_exists('iron_enqueue_field_editor_assets')) {
     /**
-     * @param string $hook
+     * Charge de quoi éditer des champs, où qu'ils soient rendus : écran
+     * d'édition de page (Brique 2) ou écran des options globales (Brique 6).
+     *
      * @return void
      */
-    function iron_admin_enqueue_field_assets($hook)
+    function iron_enqueue_field_editor_assets()
     {
-        if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
-            return;
-        }
-
-        $post = get_post();
-
-        if (!$post || 'page' !== $post->post_type) {
-            return;
-        }
-
-        if (!iron_get_post_schema($post)) {
-            return;
-        }
-
         wp_enqueue_media();
 
         wp_enqueue_style(
@@ -53,6 +41,34 @@ if (!function_exists('iron_admin_enqueue_field_assets')) {
             'frameTitle'  => __('Choisir une image', 'ironframe'),
             'frameButton' => __('Utiliser cette image', 'ironframe'),
         ]);
+    }
+}
+
+if (!function_exists('iron_admin_enqueue_field_assets')) {
+    /**
+     * N'active les assets que sur un écran d'édition de page qui possède
+     * réellement un schéma : inutile d'imposer la médiathèque JS ailleurs.
+     *
+     * @param string $hook
+     * @return void
+     */
+    function iron_admin_enqueue_field_assets($hook)
+    {
+        if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
+            return;
+        }
+
+        $post = get_post();
+
+        if (!$post || 'page' !== $post->post_type) {
+            return;
+        }
+
+        if (!iron_get_post_schema($post)) {
+            return;
+        }
+
+        iron_enqueue_field_editor_assets();
     }
 }
 add_action('admin_enqueue_scripts', 'iron_admin_enqueue_field_assets');

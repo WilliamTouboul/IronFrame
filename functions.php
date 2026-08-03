@@ -24,6 +24,12 @@ $iron_modules = [
     'inc/fields/store.php',  // Lecture / écriture des valeurs.
     'inc/fields/api.php',    // Brique 3 — API de lecture côté template.
 
+    // Brique 6 — options globales : les données qui n'appartiennent à aucune
+    // page (coordonnées, réseaux sociaux, pied de page).
+    'inc/options/schema.php',
+    'inc/options/store.php',
+    'inc/options/api.php',
+
     // Brique 5 — le rôle client. Chargé partout : les capacités et les verrous
     // à l'enregistrement doivent tenir aussi via l'API REST.
     'inc/client/role.php',
@@ -35,6 +41,7 @@ if (is_admin()) {
     $iron_modules[] = 'inc/fields/admin/render.php';    // Brique 2 — contrôles de formulaire.
     $iron_modules[] = 'inc/fields/admin/meta-box.php';  // Brique 2 — meta boxes et sauvegarde.
     $iron_modules[] = 'inc/fields/admin/assets.php';    // Brique 2 — CSS et JS d'admin.
+    $iron_modules[] = 'inc/options/admin.php';          // Brique 6 — écran des options globales.
     $iron_modules[] = 'inc/client/admin-ui.php';        // Brique 5 — épuration de l'admin.
 }
 

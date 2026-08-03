@@ -62,6 +62,26 @@
     cursor: default;
 }
 
+/* Options globales ------------------------------------------------------- */
+
+.iron-options__group {
+    margin-bottom: 20px;
+}
+
+.iron-options__group .hndle {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f1;
+    font-size: 14px;
+}
+
+.iron-options__group .inside {
+    padding: 0 16px 4px;
+}
+
+.iron-options .iron-field .widefat {
+    max-width: 520px;
+}
+
 /* Lien ------------------------------------------------------------------- */
 
 .iron-link__row {

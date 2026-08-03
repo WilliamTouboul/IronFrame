@@ -27,10 +27,19 @@ define('IRON_ROLE_CLIENT', 'iron_client');
 define('IRON_CAP_CREATE_PAGES', 'iron_create_pages');
 
 /**
+ * Capacité d'accès aux options globales (Brique 6).
+ *
+ * Une capacité dédiée plutôt que `manage_options` : le client doit pouvoir
+ * changer le téléphone du site sans obtenir au passage l'accès aux réglages
+ * de WordPress.
+ */
+define('IRON_CAP_EDIT_OPTIONS', 'iron_edit_options');
+
+/**
  * À incrémenter à chaque modification de la liste des capacités, pour que les
  * installations existantes soient mises à jour.
  */
-define('IRON_ROLES_VERSION', '1');
+define('IRON_ROLES_VERSION', '2');
 
 if (!function_exists('iron_client_capabilities')) {
     /**
@@ -58,6 +67,10 @@ if (!function_exists('iron_client_capabilities')) {
             // relecture » à chaque enregistrement du client. Le droit de créer
             // est retiré ailleurs, par la capacité dédiée ci-dessus.
             'publish_pages' => true,
+
+            // Les données transversales du site : coordonnées, réseaux
+            // sociaux, pied de page.
+            IRON_CAP_EDIT_OPTIONS => true,
         ];
 
         /**
@@ -93,6 +106,7 @@ if (!function_exists('iron_install_roles')) {
 
             if ($role) {
                 $role->add_cap(IRON_CAP_CREATE_PAGES);
+                $role->add_cap(IRON_CAP_EDIT_OPTIONS);
             }
         }
 

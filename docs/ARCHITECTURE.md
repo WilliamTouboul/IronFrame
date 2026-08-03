@@ -137,13 +137,20 @@ Séparation à ne jamais confondre : les **capacités** et les **verrous à
 l'enregistrement** sont la frontière de sécurité ; le masquage de l'interface
 n'est que de la prévention du mauvais clic.
 
-### Brique 6 — Options globales — à faire
+### Brique 6 — Options globales — **faite**
 
-L'équivalent de la page d'options d'ACF : les contenus qui ne appartiennent à
+L'équivalent de la page d'options d'ACF : les contenus qui n'appartiennent à
 aucune page en particulier (coordonnées, réseaux sociaux, pied de page, mentions
-légales). Même moteur de schéma que la Brique 1, mais stockage dans
-`wp_options` au lieu de `wp_postmeta`, et rendu dans une page d'admin dédiée au
-lieu d'une meta box.
+légales). Même moteur de schéma que la Brique 1, même registre de types, même
+rendu de champs — ne changent que le stockage (`wp_options` au lieu de
+`wp_postmeta`) et le contenant (une page d'admin au lieu d'une meta box).
+
+- Déclaration dans `options/*.fields.php`, découverte automatique, tous les
+  fichiers fusionnés en un seul écran. Une section par groupe.
+- Lecture par `iron_option()`, `iron_option_has()`, `iron_option_image()`,
+  `iron_option_image_url()`, `iron_option_link()`, `iron_option_raw()`.
+- Accès gouverné par une capacité dédiée, `iron_edit_options`, accordée au
+  client — surtout pas `manage_options`.
 
 ## 5. Contraintes transverses
 
@@ -178,6 +185,10 @@ lieu d'une meta box.
 | `publish_pages` accordé au client | Oui, malgré les apparences | Sans cette capacité, WordPress rétrograde une page publiée en « en attente de relecture » à chaque enregistrement. Le droit de créer est retiré par la capacité dédiée ci-dessus, pas par celle-ci. |
 | Menus d'administration | Liste blanche, pas liste noire | Le client installera des plugins qu'on ne connaît pas, chacun ajoutant ses entrées. Une liste noire serait périmée dès le premier plugin installé. |
 | JS tiers | Aucune librairie chargée par défaut | GSAP était servi depuis un CDN : dépendance externe et exposition RGPD, pour un besoin qui n'existe pas sur tous les projets. Le développeur qui en a besoin l'ajoute en local. |
+| Stockage des options | Une entrée `wp_options` par champ (`iron_opt_groupe_champ`), en autoload | Symétrique du stockage des champs de page, et lisible en base. L'autoload se justifie : ces valeurs sont lues sur presque toutes les pages. |
+| Écran des options | Formulaire maison posté vers `admin-post.php`, pas la Settings API | La Settings API passe par `options.php`, verrouillé sur `manage_options` — capacité que le client ne doit pas avoir. Le formulaire maison réutilise les gardes déjà éprouvées de la Brique 2. |
+| Accès aux options | Capacité dédiée `iron_edit_options` | Le client doit pouvoir changer le téléphone du site sans obtenir au passage l'accès aux réglages de WordPress. |
+| Ordre des sections | Ordre de déclaration dans le fichier, puis ordre alphabétique des fichiers | Le développeur contrôle la présentation en écrivant son schéma, sans clé `order` à maintenir. |
 
 ## 7. Points encore ouverts
 

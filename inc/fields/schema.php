@@ -39,6 +39,28 @@ if (!function_exists('iron_meta_key')) {
     }
 }
 
+/**
+ * Préfixe des options globales (Brique 6).
+ *
+ * Pas d'underscore initial ici : contrairement aux metas, une option n'est
+ * jamais exposée dans une interface qu'il faudrait masquer au client.
+ */
+define('IRON_OPTION_PREFIX', 'iron_opt_');
+
+if (!function_exists('iron_option_name')) {
+    /**
+     * Construit le nom d'option d'un champ global.
+     *
+     * @param string $group
+     * @param string $field
+     * @return string Ex. `iron_opt_contact_phone`.
+     */
+    function iron_option_name($group, $field)
+    {
+        return IRON_OPTION_PREFIX . $group . '_' . $field;
+    }
+}
+
 if (!function_exists('iron_schema_file_for_template')) {
     /**
      * Déduit le chemin absolu du schéma associé à un template.
@@ -191,10 +213,13 @@ if (!function_exists('_iron_normalize_schema')) {
      * revanche signalée bruyamment quand WP_DEBUG est actif.
      *
      * @param array  $raw
-     * @param string $template
+     * @param string $template Sert d'étiquette dans les messages d'erreur.
+     * @param string $context  `post` pour un schéma de page, `option` pour un
+     *                         schéma global : détermine où la valeur est
+     *                         stockée, et donc quelle clé est calculée.
      * @return array<string, array>
      */
-    function _iron_normalize_schema(array $raw, $template)
+    function _iron_normalize_schema(array $raw, $template, $context = 'post')
     {
         $schema = [];
 
@@ -252,16 +277,22 @@ if (!function_exists('_iron_normalize_schema')) {
 
                 $type = iron_field_type($field['type']);
 
-                $fields[$field_key] = [
-                    'key'      => $field_key,
-                    'group'    => $group_key,
-                    'path'     => $group_key . '.' . $field_key,
-                    'type'     => $field['type'],
-                    'label'    => isset($field['label']) ? (string) $field['label'] : _iron_humanize($field_key),
-                    'desc'     => isset($field['desc']) ? (string) $field['desc'] : '',
-                    'default'  => array_key_exists('default', $field) ? $field['default'] : $type['default'],
-                    'meta_key' => iron_meta_key($group_key, $field_key),
-                ];
+                // Un champ ne porte que la clé de stockage de son contexte :
+                // une page n'a pas de nom d'option, une option n'a pas de clé
+                // de meta.
+                $storage = ('option' === $context)
+                    ? ['option_name' => iron_option_name($group_key, $field_key)]
+                    : ['meta_key' => iron_meta_key($group_key, $field_key)];
+
+                $fields[$field_key] = array_merge([
+                    'key'     => $field_key,
+                    'group'   => $group_key,
+                    'path'    => $group_key . '.' . $field_key,
+                    'type'    => $field['type'],
+                    'label'   => isset($field['label']) ? (string) $field['label'] : _iron_humanize($field_key),
+                    'desc'    => isset($field['desc']) ? (string) $field['desc'] : '',
+                    'default' => array_key_exists('default', $field) ? $field['default'] : $type['default'],
+                ], $storage);
             }
 
             if (empty($fields)) {
