@@ -25,15 +25,11 @@ iron_header();
     </aside>
 <?php endif; ?>
 
-<section class="hero">
+<section class="hero hero--<?= iron_field('hero.align') ?>">
 
     <?php if (iron_has('hero.image')) : ?>
         <?= iron_image('hero.image', '16_9', ['class' => 'hero__bg']) ?>
     <?php endif; ?>
-
-    <?php
-    echo do_shortcode('[contact-form-7 id="e2971f5" title="Contact form 1"]');
-    ?>
 
     <h1 class="hero__title"><?= iron_field('hero.title') ?></h1>
 

@@ -76,6 +76,18 @@ if (!function_exists('iron_field_types')) {
                 'label_for' => false,
             ],
 
+            'select' => [
+                // La valeur stockée est la CLÉ, pas le libellé : c'est elle
+                // qu'on injecte dans une classe CSS ou qu'on compare dans le
+                // template. Le libellé n'existe que pour le client.
+                'label'     => __('Liste de choix', 'ironframe'),
+                'default'   => '',
+                'sanitize'  => 'iron_sanitize_select',
+                'render'    => 'iron_render_select_field',
+                'escape'    => 'iron_escape_text',
+                'is_filled' => 'iron_select_is_filled',
+            ],
+
             'repeater' => [
                 // Le seul type composite : sa valeur est une liste de lignes,
                 // chaque ligne étant un tableau de sous-champs. Stockée telle
@@ -199,6 +211,43 @@ if (!function_exists('iron_sanitize_link')) {
             'label'  => isset($value['label']) ? sanitize_text_field((string) $value['label']) : '',
             'target' => in_array($target, ['_self', '_blank'], true) ? $target : '_self',
         ];
+    }
+}
+
+if (!function_exists('iron_sanitize_select')) {
+    /**
+     * N'accepte qu'une clé réellement déclarée dans `options`.
+     *
+     * C'est ce qui rend le type sûr : quelle que soit la valeur soumise, ce
+     * qui entre en base fait partie d'une liste écrite par le développeur.
+     *
+     * @param mixed      $value
+     * @param array|null $field
+     * @return string
+     */
+    function iron_sanitize_select($value, $field = null)
+    {
+        if (!is_scalar($value) || !is_array($field) || empty($field['options'])) {
+            return '';
+        }
+
+        $value = (string) $value;
+
+        return array_key_exists($value, $field['options']) ? $value : '';
+    }
+}
+
+if (!function_exists('iron_select_is_filled')) {
+    /**
+     * Un choix dont la clé est « 0 » est un choix valide : `empty()` ne
+     * convient donc pas ici.
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    function iron_select_is_filled($value)
+    {
+        return '' !== (string) $value;
     }
 }
 

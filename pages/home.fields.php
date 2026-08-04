@@ -67,6 +67,19 @@ return [
                 'type'  => 'link',
                 'label' => 'Bouton',
             ],
+
+            // Une liste de choix stocke la CLÉ, pas le libellé : c'est elle
+            // qu'on injecte dans une classe CSS.
+            'align' => [
+                'type'    => 'select',
+                'label'   => 'Alignement du contenu',
+                'default' => 'left',
+                'options' => [
+                    'left'   => 'À gauche',
+                    'center' => 'Centré',
+                    'right'  => 'À droite',
+                ],
+            ],
         ],
     ],
 

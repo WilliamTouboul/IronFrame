@@ -317,6 +317,31 @@ if (!function_exists('_iron_normalize_schema')) {
 
                 $extra = [];
 
+                if ('select' === $field['type']) {
+                    $options = isset($field['options']) && is_array($field['options'])
+                        ? $field['options']
+                        : [];
+
+                    if (!$options) {
+                        _iron_schema_warning(
+                            sprintf('la liste de choix « %s.%s » doit déclarer une clé `options` non vide.', $group_key, $field_key),
+                            $template
+                        );
+                        continue;
+                    }
+
+                    // Les clés sont normalisées en chaînes : PHP transforme
+                    // silencieusement une clé numérique en entier, et la
+                    // comparaison stricte à la sauvegarde échouerait.
+                    $clean_options = [];
+
+                    foreach ($options as $option_key => $option_label) {
+                        $clean_options[(string) $option_key] = (string) $option_label;
+                    }
+
+                    $extra = ['options' => $clean_options];
+                }
+
                 if ('repeater' === $field['type']) {
                     $sub_fields = _iron_normalize_subfields(
                         isset($field['fields']) ? $field['fields'] : [],
@@ -451,15 +476,38 @@ if (!function_exists('_iron_normalize_subfields')) {
                 );
             }
 
-            $type = iron_field_type($field['type']);
+            $type  = iron_field_type($field['type']);
+            $extra = [];
 
-            $fields[$key] = [
+            if ('select' === $field['type']) {
+                $options = isset($field['options']) && is_array($field['options'])
+                    ? $field['options']
+                    : [];
+
+                if (!$options) {
+                    _iron_schema_warning(
+                        sprintf('la liste de choix « %s.%s » doit déclarer une clé `options` non vide.', $parent_path, $key),
+                        $template
+                    );
+                    continue;
+                }
+
+                $clean_options = [];
+
+                foreach ($options as $option_key => $option_label) {
+                    $clean_options[(string) $option_key] = (string) $option_label;
+                }
+
+                $extra = ['options' => $clean_options];
+            }
+
+            $fields[$key] = array_merge([
                 'key'     => $key,
                 'type'    => $field['type'],
                 'label'   => isset($field['label']) ? (string) $field['label'] : _iron_humanize($key),
                 'desc'    => isset($field['desc']) ? (string) $field['desc'] : '',
                 'default' => array_key_exists('default', $field) ? $field['default'] : $type['default'],
-            ];
+            ], $extra);
         }
 
         return $fields;

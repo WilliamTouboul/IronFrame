@@ -120,6 +120,43 @@ if (!function_exists('iron_render_textarea_field')) {
     }
 }
 
+if (!function_exists('iron_render_select_field')) {
+    /**
+     * Liste déroulante.
+     *
+     * Une option vide est toujours proposée en tête : sans elle, un champ
+     * jamais touché prendrait silencieusement la première valeur de la liste,
+     * et le client n'aurait aucun moyen de revenir en arrière. Si le champ est
+     * obligatoire, la validation refusera ce choix vide.
+     *
+     * @param array $field
+     * @param mixed $value
+     * @return void
+     */
+    function iron_render_select_field(array $field, $value)
+    {
+        $value   = (string) $value;
+        $options = isset($field['options']) ? (array) $field['options'] : [];
+        ?>
+        <select id="<?php echo esc_attr(iron_field_input_id($field)); ?>"
+                name="<?php echo esc_attr(iron_field_input_name($field)); ?>">
+
+            <option value="">
+                <?php echo esc_html('— ' . __('Aucun choix', 'ironframe') . ' —'); ?>
+            </option>
+
+            <?php foreach ($options as $option_value => $option_label) : ?>
+                <option value="<?php echo esc_attr((string) $option_value); ?>"
+                    <?php selected($value, (string) $option_value); ?>>
+                    <?php echo esc_html($option_label); ?>
+                </option>
+            <?php endforeach; ?>
+
+        </select>
+        <?php
+    }
+}
+
 if (!function_exists('iron_render_image_field')) {
     /**
      * Sélecteur d'image adossé à la médiathèque native (`wp.media`).
