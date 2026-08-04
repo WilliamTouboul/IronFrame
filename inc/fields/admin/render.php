@@ -22,7 +22,12 @@ if (!function_exists('iron_field_input_name')) {
      */
     function iron_field_input_name(array $field, $sub = '')
     {
-        $name = sprintf('iron[%s][%s]', $field['group'], $field['key']);
+        // Un sous-champ de répétable arrive avec son nom déjà calculé, index
+        // de ligne compris. C'est ce qui permet aux contrôles de chaque type
+        // de fonctionner à l'identique dedans et dehors.
+        $name = isset($field['input_name'])
+            ? $field['input_name']
+            : sprintf('iron[%s][%s]', $field['group'], $field['key']);
 
         return '' === $sub ? $name : $name . '[' . $sub . ']';
     }
@@ -36,7 +41,9 @@ if (!function_exists('iron_field_input_id')) {
      */
     function iron_field_input_id(array $field, $sub = '')
     {
-        $id = 'iron-' . $field['group'] . '-' . $field['key'];
+        $id = isset($field['input_id'])
+            ? $field['input_id']
+            : 'iron-' . $field['group'] . '-' . $field['key'];
 
         return '' === $sub ? $id : $id . '-' . $sub;
     }
@@ -114,6 +121,146 @@ if (!function_exists('iron_render_image_field')) {
                     <?php esc_html_e('Retirer', 'ironframe'); ?>
                 </button>
             </p>
+
+        </div>
+        <?php
+    }
+}
+
+if (!function_exists('iron_render_repeater_field')) {
+    /**
+     * Liste répétable : les lignes existantes, plus un gabarit inerte que le
+     * JavaScript clone pour en ajouter une.
+     *
+     * Les index de ligne n'ont pas besoin d'être contigus ni ordonnés : la
+     * sauvegarde réindexe d'après l'ordre de soumission, qui est l'ordre du
+     * DOM. C'est ce qui permet de supprimer et de déplacer une ligne sans
+     * réécrire un seul attribut `name` en JavaScript.
+     *
+     * @param array $field
+     * @param mixed $value Liste de lignes.
+     * @return void
+     */
+    function iron_render_repeater_field(array $field, $value)
+    {
+        $rows = is_array($value) ? array_values($value) : [];
+        $max  = isset($field['max']) ? (int) $field['max'] : 0;
+        $min  = isset($field['min']) ? (int) $field['min'] : 0;
+        ?>
+        <div class="iron-repeater"
+             data-iron-repeater
+             data-iron-max="<?php echo esc_attr((string) $max); ?>"
+             data-iron-min="<?php echo esc_attr((string) $min); ?>"
+             data-iron-next="<?php echo esc_attr((string) count($rows)); ?>">
+
+            <div class="iron-repeater__rows" data-iron-repeater-rows>
+                <?php foreach ($rows as $index => $row) : ?>
+                    <?php iron_render_repeater_row($field, $index, $row); ?>
+                <?php endforeach; ?>
+            </div>
+
+            <p class="iron-repeater__empty" data-iron-repeater-empty>
+                <?php esc_html_e('Aucune ligne pour le moment.', 'ironframe'); ?>
+            </p>
+
+            <p class="iron-repeater__actions">
+                <button type="button" class="button button-secondary" data-iron-repeater-add>
+                    <?php echo esc_html($field['label_add']); ?>
+                </button>
+            </p>
+
+            <?php // Contenu inerte : rien à l'intérieur n'est soumis. ?>
+            <template data-iron-repeater-template>
+                <?php iron_render_repeater_row($field, '__INDEX__', []); ?>
+            </template>
+
+        </div>
+        <?php
+    }
+}
+
+if (!function_exists('iron_render_repeater_row')) {
+    /**
+     * Une ligne de répétable.
+     *
+     * @param array      $field
+     * @param int|string $index Index de ligne, ou `__INDEX__` pour le gabarit.
+     * @param array      $row   Valeurs de la ligne.
+     * @return void
+     */
+    function iron_render_repeater_row(array $field, $index, $row)
+    {
+        $row = is_array($row) ? $row : [];
+        ?>
+        <div class="iron-repeater__row" data-iron-repeater-row>
+
+            <div class="iron-repeater__head">
+                <span class="iron-repeater__number"><?php echo esc_html($field['label_row']); ?></span>
+
+                <span class="iron-repeater__buttons">
+                    <button type="button" class="button-link iron-repeater__move" data-iron-repeater-up
+                            aria-label="<?php esc_attr_e('Monter cette ligne', 'ironframe'); ?>">&uarr;</button>
+                    <button type="button" class="button-link iron-repeater__move" data-iron-repeater-down
+                            aria-label="<?php esc_attr_e('Descendre cette ligne', 'ironframe'); ?>">&darr;</button>
+                    <button type="button" class="button-link-delete" data-iron-repeater-remove>
+                        <?php esc_html_e('Supprimer', 'ironframe'); ?>
+                    </button>
+                </span>
+            </div>
+
+            <div class="iron-repeater__fields iron-fields">
+                <?php
+                foreach ($field['fields'] as $key => $sub_field) {
+
+                    $sub_type = iron_field_type($sub_field['type']);
+
+                    if (!$sub_type || !is_callable($sub_type['render'])) {
+                        continue;
+                    }
+
+                    $sub_field['input_name'] = sprintf(
+                        'iron[%s][%s][%s][%s]',
+                        $field['group'],
+                        $field['key'],
+                        $index,
+                        $key
+                    );
+
+                    $sub_field['input_id'] = sprintf(
+                        'iron-%s-%s-%s-%s',
+                        $field['group'],
+                        $field['key'],
+                        $index,
+                        $key
+                    );
+
+                    $sub_value = array_key_exists($key, $row) ? $row[$key] : $sub_field['default'];
+
+                    $label_for = !isset($sub_type['label_for']) || false !== $sub_type['label_for'];
+                    ?>
+                    <div class="iron-field iron-field--<?php echo esc_attr($sub_field['type']); ?>">
+
+                        <?php if ($label_for) : ?>
+                            <label class="iron-field__label" for="<?php echo esc_attr(iron_field_input_id($sub_field)); ?>">
+                                <?php echo esc_html($sub_field['label']); ?>
+                            </label>
+                        <?php else : ?>
+                            <span class="iron-field__label"><?php echo esc_html($sub_field['label']); ?></span>
+                        <?php endif; ?>
+
+                        <div class="iron-field__control">
+                            <?php call_user_func($sub_type['render'], $sub_field, $sub_value); ?>
+                        </div>
+
+                        <?php if ('' !== $sub_field['desc']) : ?>
+                            <p class="iron-field__desc description"><?php echo esc_html($sub_field['desc']); ?></p>
+                        <?php endif; ?>
+
+                    </div>
+                    <?php
+                }
+                ?>
+            </div>
 
         </div>
         <?php

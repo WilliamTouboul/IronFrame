@@ -58,6 +58,35 @@ return [
                 'label'   => 'Titre de section',
                 'default' => 'Nos services',
             ],
+
+            // Liste répétable : le client ajoute, réordonne et supprime des
+            // lignes, mais ne décide ni des sous-champs ni du nombre maximum.
+            'items' => [
+                'type'      => 'repeater',
+                'label'     => 'Prestations',
+                'desc'      => 'Six prestations au maximum.',
+                'max'       => 6,
+                'label_add' => 'Ajouter une prestation',
+                'label_row' => 'Prestation',
+                'fields'    => [
+                    'title' => [
+                        'type'  => 'text',
+                        'label' => 'Intitulé',
+                    ],
+                    'text' => [
+                        'type'  => 'textarea',
+                        'label' => 'Description',
+                    ],
+                    'image' => [
+                        'type'  => 'image',
+                        'label' => 'Illustration',
+                    ],
+                    'cta' => [
+                        'type'  => 'link',
+                        'label' => 'En savoir plus',
+                    ],
+                ],
+            ],
         ],
     ],
 

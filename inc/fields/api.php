@@ -36,6 +36,12 @@ if (!function_exists('iron_field')) {
             return '';
         }
 
+        if ('repeater' === $field['type']) {
+            _iron_debug_warning(sprintf('« %s » est une liste répétable : utilisez iron_rows().', $path));
+
+            return '';
+        }
+
         $type = iron_field_type($field['type']);
 
         if (!$type || !isset($type['escape']) || !is_callable($type['escape'])) {
@@ -44,7 +50,7 @@ if (!function_exists('iron_field')) {
             return '';
         }
 
-        return call_user_func($type['escape'], iron_get_raw_value($field, $post));
+        return call_user_func($type['escape'], iron_get_raw_value($field, $post), $field);
     }
 }
 
@@ -164,31 +170,7 @@ if (!function_exists('iron_link')) {
             return '';
         }
 
-        $link = iron_get_raw_value($field, $post);
-
-        if (!is_array($link) || '' === $link['url']) {
-            return '';
-        }
-
-        $label = '' !== $link['label'] ? $link['label'] : $link['url'];
-
-        $attr = is_array($attr) ? $attr : [];
-        $attr['href'] = $link['url'];
-
-        if ('_blank' === $link['target']) {
-            $attr['target'] = '_blank';
-
-            // `noopener` n'est pas cosmétique : sans lui, la page ouverte garde
-            // une référence vers la nôtre via window.opener.
-            $rel = isset($attr['rel']) ? $attr['rel'] . ' ' : '';
-            $attr['rel'] = trim($rel . 'noopener noreferrer');
-        }
-
-        return sprintf(
-            '<a %s>%s</a>',
-            _iron_build_attributes($attr),
-            esc_html($label)
-        );
+        return _iron_build_link_tag(iron_get_raw_value($field, $post), $attr);
     }
 }
 
@@ -213,8 +195,294 @@ if (!function_exists('iron_field_raw')) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Listes répétables                                                          */
+/* -------------------------------------------------------------------------- */
+
+if (!function_exists('iron_rows')) {
+    /**
+     * Lignes d'une liste répétable.
+     *
+     * Chaque ligne est un tableau dont les valeurs sont **déjà échappées** :
+     * `$row['title']` est directement sûr dans du HTML. Les images et les
+     * liens passent par les fonctions dédiées ci-dessous, qui ont besoin de la
+     * valeur brute.
+     *
+     *     <?php foreach (iron_rows('services.items') as $row) : ?>
+     *         <h3><?= $row['title'] ?></h3>
+     *         <?= iron_row_image($row, 'image', '4_3') ?>
+     *         <?= iron_row_link($row, 'cta', ['class' => 'btn']) ?>
+     *     <?php endforeach; ?>
+     *
+     * @param string           $path
+     * @param int|WP_Post|null $post
+     * @return array<int, array>
+     */
+    function iron_rows($path, $post = null)
+    {
+        $field = _iron_resolve_field($path, $post, 'repeater');
+
+        if (!$field) {
+            return [];
+        }
+
+        return _iron_build_rows(iron_get_raw_value($field, $post), $field);
+    }
+}
+
+if (!function_exists('iron_row')) {
+    /**
+     * Valeur échappée d'un sous-champ, avec vérification du type.
+     *
+     * Équivalent de `$row['clef']`, mais qui avertit si la clé n'existe pas
+     * dans le schéma plutôt que de renvoyer du vide en silence.
+     *
+     * @param array  $row
+     * @param string $key
+     * @return mixed
+     */
+    function iron_row($row, $key)
+    {
+        if (!_iron_resolve_row_field($row, $key)) {
+            return '';
+        }
+
+        return array_key_exists($key, $row) ? $row[$key] : '';
+    }
+}
+
+if (!function_exists('iron_row_has')) {
+    /**
+     * Le sous-champ est-il rempli sur cette ligne ?
+     *
+     * @param array  $row
+     * @param string $key
+     * @return bool
+     */
+    function iron_row_has($row, $key)
+    {
+        $sub_field = _iron_resolve_row_field($row, $key);
+
+        if (!$sub_field) {
+            return false;
+        }
+
+        $value = _iron_row_raw($row, $key);
+        $type  = iron_field_type($sub_field['type']);
+
+        if ($type && isset($type['is_filled']) && is_callable($type['is_filled'])) {
+            return (bool) call_user_func($type['is_filled'], $value);
+        }
+
+        return !empty($value);
+    }
+}
+
+if (!function_exists('iron_row_image')) {
+    /**
+     * Balise <img> d'une image de ligne.
+     *
+     * @param array  $row
+     * @param string $key
+     * @param string $size
+     * @param array  $attr
+     * @return string
+     */
+    function iron_row_image($row, $key, $size = 'full', $attr = [])
+    {
+        if (!_iron_resolve_row_field($row, $key, 'image')) {
+            return '';
+        }
+
+        $attachment_id = absint(_iron_row_raw($row, $key));
+
+        if (!$attachment_id) {
+            return '';
+        }
+
+        return wp_get_attachment_image($attachment_id, $size, false, $attr);
+    }
+}
+
+if (!function_exists('iron_row_image_url')) {
+    /**
+     * @param array  $row
+     * @param string $key
+     * @param string $size
+     * @return string
+     */
+    function iron_row_image_url($row, $key, $size = 'full')
+    {
+        if (!_iron_resolve_row_field($row, $key, 'image')) {
+            return '';
+        }
+
+        $attachment_id = absint(_iron_row_raw($row, $key));
+
+        if (!$attachment_id) {
+            return '';
+        }
+
+        $url = wp_get_attachment_image_url($attachment_id, $size);
+
+        return $url ? esc_url($url) : '';
+    }
+}
+
+if (!function_exists('iron_row_link')) {
+    /**
+     * Balise <a> d'un lien de ligne.
+     *
+     * @param array  $row
+     * @param string $key
+     * @param array  $attr
+     * @return string
+     */
+    function iron_row_link($row, $key, $attr = [])
+    {
+        if (!_iron_resolve_row_field($row, $key, 'link')) {
+            return '';
+        }
+
+        return _iron_build_link_tag(_iron_row_raw($row, $key), $attr);
+    }
+}
+
+/* -------------------------------------------------------------------------- */
 /* Interne                                                                    */
 /* -------------------------------------------------------------------------- */
+
+if (!function_exists('_iron_build_rows')) {
+    /**
+     * Construit les lignes exposées au template.
+     *
+     * Chaque ligne embarque deux clés réservées : la définition du répétable,
+     * pour que les accesseurs connaissent le type de chaque sous-champ, et une
+     * copie brute des valeurs, dont images et liens ont besoin.
+     *
+     * Ces clés ne peuvent entrer en collision avec un sous-champ : un
+     * identifiant déclaré doit commencer par une lettre minuscule.
+     *
+     * @param mixed $raw
+     * @param array $field
+     * @return array<int, array>
+     */
+    function _iron_build_rows($raw, array $field)
+    {
+        $raw = is_array($raw) ? array_values($raw) : [];
+
+        $rows = [];
+
+        foreach (iron_escape_repeater($raw, $field) as $index => $row) {
+            $row['__iron_field'] = $field;
+            $row['__iron_raw']   = isset($raw[$index]) && is_array($raw[$index]) ? $raw[$index] : [];
+
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+}
+
+if (!function_exists('_iron_row_raw')) {
+    /**
+     * Valeur brute d'un sous-champ, pour les fonctions qui doivent la
+     * retraiter elles-mêmes.
+     *
+     * @param array  $row
+     * @param string $key
+     * @return mixed
+     */
+    function _iron_row_raw($row, $key)
+    {
+        return isset($row['__iron_raw'][$key]) ? $row['__iron_raw'][$key] : '';
+    }
+}
+
+if (!function_exists('_iron_resolve_row_field')) {
+    /**
+     * Retrouve la définition d'un sous-champ à partir d'une ligne.
+     *
+     * @param mixed  $row
+     * @param string $key
+     * @param string $expected_type
+     * @return array|null
+     */
+    function _iron_resolve_row_field($row, $key, $expected_type = '')
+    {
+        if (!is_array($row) || !isset($row['__iron_field']['fields'])) {
+            _iron_debug_warning('ligne invalide : elle ne provient pas de iron_rows() ou iron_option_rows().');
+
+            return null;
+        }
+
+        $fields = $row['__iron_field']['fields'];
+
+        if (!isset($fields[$key])) {
+            _iron_debug_warning(sprintf(
+                'sous-champ inconnu « %s » dans la liste « %s ».',
+                $key,
+                $row['__iron_field']['path']
+            ));
+
+            return null;
+        }
+
+        $sub_field = $fields[$key];
+
+        if ('' !== $expected_type && $expected_type !== $sub_field['type']) {
+            _iron_debug_warning(sprintf(
+                'le sous-champ « %s.%s » est de type « %s », mais il est lu comme un « %s ».',
+                $row['__iron_field']['path'],
+                $key,
+                $sub_field['type'],
+                $expected_type
+            ));
+
+            return null;
+        }
+
+        return $sub_field;
+    }
+}
+
+if (!function_exists('_iron_build_link_tag')) {
+    /**
+     * Assemble une balise <a> à partir d'une valeur de lien brute.
+     *
+     * Partagée par `iron_link()`, `iron_option_link()` et `iron_row_link()` :
+     * la règle du `noopener` ne doit exister qu'à un seul endroit.
+     *
+     * @param mixed $link Tableau url / label / target, non échappé.
+     * @param array $attr
+     * @return string
+     */
+    function _iron_build_link_tag($link, $attr = [])
+    {
+        if (!is_array($link) || empty($link['url'])) {
+            return '';
+        }
+
+        $label = !empty($link['label']) ? $link['label'] : $link['url'];
+
+        $attr = is_array($attr) ? $attr : [];
+        $attr['href'] = $link['url'];
+
+        if (isset($link['target']) && '_blank' === $link['target']) {
+            $attr['target'] = '_blank';
+
+            // `noopener` n'est pas cosmétique : sans lui, la page ouverte garde
+            // une référence vers la nôtre via window.opener.
+            $rel = isset($attr['rel']) ? $attr['rel'] . ' ' : '';
+            $attr['rel'] = trim($rel . 'noopener noreferrer');
+        }
+
+        return sprintf(
+            '<a %s>%s</a>',
+            _iron_build_attributes($attr),
+            esc_html($label)
+        );
+    }
+}
 
 if (!function_exists('_iron_resolve_field')) {
     /**

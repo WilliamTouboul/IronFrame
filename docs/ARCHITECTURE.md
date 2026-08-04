@@ -72,7 +72,8 @@ Les briques sont validées **une par une**. Aucun enchaînement automatique.
 ### Brique 1 — Système d'enregistrement des types de champs — **faite**
 
 - Définir une structure de déclaration des champs (nom, type, template associé).
-- Types retenus pour la V1 : **`text`, `textarea`, `image`, `link`** (cf. §6).
+- Types retenus pour la V1 : **`text`, `textarea`, `image`, `link`** (cf. §6),
+  rejoints depuis par **`repeater`**, le champ répétable.
 - Prévoir dès le départ l'extensibilité vers d'autres types (lien, couleur, champ
   répétable pour galerie) **sans** les implémenter en V1.
 
@@ -171,7 +172,8 @@ rendu de champs — ne changent que le stockage (`wp_options` au lieu de
 | Sujet | Décision | Justification |
 |---|---|---|
 | Moteur d'édition | Meta boxes classiques | Pas de toolchain JS. L'éditeur est déjà retiré des pages, l'écran classique s'affiche donc nativement. |
-| Stockage | Hybride : une meta par champ scalaire (clé plate préfixée), un blob JSON pour les structures répétables | Reste lisible en base et interrogeable en `meta_query`, sans reproduire le schéma `field_0_sous_champ` d'ACF. |
+| Stockage | Hybride : une meta par champ scalaire (clé plate préfixée), une seule meta pour un répétable entier | Reste lisible en base et interrogeable en `meta_query`, sans reproduire le schéma `field_0_sous_champ` d'ACF. |
+| Format du répétable en base | Tableau PHP, sérialisé par WordPress — **et non du JSON**, contrairement à ce qui était prévu au départ | `update_post_meta()` et `update_option()` sérialisent nativement les tableaux et les désérialisent à la lecture. Encoder en JSON par-dessus aurait ajouté deux conversions manuelles et un risque de chaîne malformée, sans rien apporter. |
 | Échappement | Par défaut dans l'API de lecture | Voir Brique 4. |
 | Périmètre plugins | Seul ACF est remplacé | Voir §2. |
 | Rattachement des champs | Au **template de page natif** (`Template Name:`), pas au slug | Le routeur par slug tombe en 404 dès que le client renomme une page. Rattacher au template découple le contenu de l'URL et permet de réutiliser un template sur plusieurs pages. Implique un refactor de `index.php`. |
@@ -189,6 +191,10 @@ rendu de champs — ne changent que le stockage (`wp_options` au lieu de
 | Écran des options | Formulaire maison posté vers `admin-post.php`, pas la Settings API | La Settings API passe par `options.php`, verrouillé sur `manage_options` — capacité que le client ne doit pas avoir. Le formulaire maison réutilise les gardes déjà éprouvées de la Brique 2. |
 | Accès aux options | Capacité dédiée `iron_edit_options` | Le client doit pouvoir changer le téléphone du site sans obtenir au passage l'accès aux réglages de WordPress. |
 | Ordre des sections | Ordre de déclaration dans le fichier, puis ordre alphabétique des fichiers | Le développeur contrôle la présentation en écrivant son schéma, sans clé `order` à maintenir. |
+| Réindexation des lignes | Faite en PHP à la sauvegarde, jamais en JavaScript | L'ordre des clés d'un tableau `$_POST` est celui du DOM. Ajouter, supprimer et déplacer une ligne se réduisent donc à manipuler des nœuds : aucun attribut `name` n'est réécrit côté navigateur, ce qui supprime la principale source de bugs des répétables. |
+| Réordonnancement | Boutons monter / descendre, pas de glisser-déposer | Accessible au clavier sans effort, fonctionne sur tablette, et évite un conflit connu entre les zones de glisser-déposer et la modale de la médiathèque. Un tri par glissement reste ajoutable par-dessus. |
+| Répétable imbriqué | Refusé, avec un avertissement explicite | Ce n'est pas une limite technique mais un arbitrage : les index imbriqués doublent la complexité du rendu, du JavaScript et de la sauvegarde, pour un besoin qui ne s'est pas présenté sur un site vitrine. |
+| Lignes exposées au template | Valeurs déjà échappées, plus une copie brute sous une clé réservée | `$row['titre']` est ainsi sûr par défaut, ce qui protège le développeur qui accède au tableau directement. Les images et les liens ont besoin de la valeur brute — réappliquer `esc_url()` sur une URL déjà échappée doublerait l'encodage des `&`. |
 
 ## 7. Points encore ouverts
 

@@ -32,6 +32,12 @@ if (!function_exists('iron_option')) {
             return '';
         }
 
+        if ('repeater' === $field['type']) {
+            _iron_debug_warning(sprintf('« %s » est une liste répétable : utilisez iron_option_rows().', $path));
+
+            return '';
+        }
+
         $type = iron_field_type($field['type']);
 
         if (!$type || !isset($type['escape']) || !is_callable($type['escape'])) {
@@ -40,7 +46,30 @@ if (!function_exists('iron_option')) {
             return '';
         }
 
-        return call_user_func($type['escape'], iron_get_raw_option($field));
+        return call_user_func($type['escape'], iron_get_raw_option($field), $field);
+    }
+}
+
+if (!function_exists('iron_option_rows')) {
+    /**
+     * Lignes d'une liste répétable globale.
+     *
+     * Les lignes retournées se manipulent avec les mêmes accesseurs que celles
+     * des pages : `iron_row()`, `iron_row_has()`, `iron_row_image()`,
+     * `iron_row_link()`.
+     *
+     * @param string $path
+     * @return array<int, array>
+     */
+    function iron_option_rows($path)
+    {
+        $field = _iron_resolve_option($path, 'repeater');
+
+        if (!$field) {
+            return [];
+        }
+
+        return _iron_build_rows(iron_get_raw_option($field), $field);
     }
 }
 
@@ -139,29 +168,7 @@ if (!function_exists('iron_option_link')) {
             return '';
         }
 
-        $link = iron_get_raw_option($field);
-
-        if (!is_array($link) || '' === $link['url']) {
-            return '';
-        }
-
-        $label = '' !== $link['label'] ? $link['label'] : $link['url'];
-
-        $attr = is_array($attr) ? $attr : [];
-        $attr['href'] = $link['url'];
-
-        if ('_blank' === $link['target']) {
-            $attr['target'] = '_blank';
-
-            $rel = isset($attr['rel']) ? $attr['rel'] . ' ' : '';
-            $attr['rel'] = trim($rel . 'noopener noreferrer');
-        }
-
-        return sprintf(
-            '<a %s>%s</a>',
-            _iron_build_attributes($attr),
-            esc_html($label)
-        );
+        return _iron_build_link_tag(iron_get_raw_option($field), $attr);
     }
 }
 

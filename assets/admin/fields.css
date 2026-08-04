@@ -62,6 +62,81 @@
     cursor: default;
 }
 
+/* Répétable -------------------------------------------------------------- */
+
+.iron-repeater__rows {
+    /* La numérotation des lignes est un compteur CSS : elle se met à jour
+       toute seule à l'ajout, à la suppression et au déplacement, sans une
+       ligne de JavaScript. */
+    counter-reset: iron-row;
+}
+
+.iron-repeater__row {
+    counter-increment: iron-row;
+    margin-bottom: 12px;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    background: #fff;
+}
+
+.iron-repeater__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f1;
+    background: #f6f7f7;
+}
+
+.iron-repeater__number {
+    font-weight: 600;
+}
+
+.iron-repeater__number::after {
+    content: " " counter(iron-row);
+}
+
+.iron-repeater__buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.iron-repeater__move {
+    padding: 0 4px;
+    font-size: 15px;
+    line-height: 1;
+}
+
+.iron-repeater__buttons button[disabled] {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.iron-repeater__fields {
+    padding: 0 12px;
+}
+
+.iron-repeater__empty {
+    margin: 0 0 12px;
+    color: #646970;
+    font-style: italic;
+}
+
+.iron-repeater__empty[hidden] {
+    display: none;
+}
+
+.iron-repeater__actions {
+    margin: 0;
+}
+
+/* Une image dans une ligne n'a pas besoin d'un aperçu pleine largeur. */
+.iron-repeater__row .iron-image__preview {
+    max-width: 200px;
+}
+
 /* Options globales ------------------------------------------------------- */
 
 .iron-options__group {

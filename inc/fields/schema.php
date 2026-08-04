@@ -284,6 +284,36 @@ if (!function_exists('_iron_normalize_schema')) {
                     ? ['option_name' => iron_option_name($group_key, $field_key)]
                     : ['meta_key' => iron_meta_key($group_key, $field_key)];
 
+                $extra = [];
+
+                if ('repeater' === $field['type']) {
+                    $sub_fields = _iron_normalize_subfields(
+                        isset($field['fields']) ? $field['fields'] : [],
+                        $template,
+                        $group_key . '.' . $field_key
+                    );
+
+                    if (!$sub_fields) {
+                        _iron_schema_warning(
+                            sprintf('le répétable « %s.%s » doit déclarer au moins un sous-champ valide dans `fields`.', $group_key, $field_key),
+                            $template
+                        );
+                        continue;
+                    }
+
+                    $extra = [
+                        'fields'    => $sub_fields,
+                        'min'       => isset($field['min']) ? max(0, (int) $field['min']) : 0,
+                        'max'       => isset($field['max']) ? max(0, (int) $field['max']) : 0,
+                        'label_add' => isset($field['label_add'])
+                            ? (string) $field['label_add']
+                            : __('Ajouter une ligne', 'ironframe'),
+                        'label_row' => isset($field['label_row'])
+                            ? (string) $field['label_row']
+                            : __('Ligne', 'ironframe'),
+                    ];
+                }
+
                 $fields[$field_key] = array_merge([
                     'key'     => $field_key,
                     'group'   => $group_key,
@@ -292,7 +322,7 @@ if (!function_exists('_iron_normalize_schema')) {
                     'label'   => isset($field['label']) ? (string) $field['label'] : _iron_humanize($field_key),
                     'desc'    => isset($field['desc']) ? (string) $field['desc'] : '',
                     'default' => array_key_exists('default', $field) ? $field['default'] : $type['default'],
-                ], $storage);
+                ], $storage, $extra);
             }
 
             if (empty($fields)) {
@@ -307,6 +337,81 @@ if (!function_exists('_iron_normalize_schema')) {
         }
 
         return $schema;
+    }
+}
+
+if (!function_exists('_iron_normalize_subfields')) {
+    /**
+     * Normalise les sous-champs d'un répétable.
+     *
+     * Ils ne portent aucune clé de stockage : leur valeur vit à l'intérieur de
+     * celle du répétable, pas dans une ligne de `postmeta` ou `options`
+     * distincte.
+     *
+     * Un répétable dans un répétable est refusé. Ce n'est pas une limite
+     * technique insurmontable, c'est un choix : la gestion des index imbriqués
+     * double la complexité du rendu, du JavaScript et de la sauvegarde, pour
+     * un besoin qui ne s'est jamais présenté sur un site vitrine.
+     *
+     * @param mixed  $raw
+     * @param string $template
+     * @param string $parent_path Chemin du répétable, pour les messages.
+     * @return array<string, array>
+     */
+    function _iron_normalize_subfields($raw, $template, $parent_path)
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $fields = [];
+
+        foreach ($raw as $key => $field) {
+
+            if (!_iron_is_valid_key($key)) {
+                _iron_schema_warning(
+                    sprintf('identifiant de sous-champ invalide « %s » dans « %s ».', $key, $parent_path),
+                    $template
+                );
+                continue;
+            }
+
+            if (!is_array($field) || empty($field['type'])) {
+                _iron_schema_warning(
+                    sprintf('le sous-champ « %s.%s » doit déclarer une clé `type`.', $parent_path, $key),
+                    $template
+                );
+                continue;
+            }
+
+            if ('repeater' === $field['type']) {
+                _iron_schema_warning(
+                    sprintf('« %s.%s » : un répétable ne peut pas en contenir un autre.', $parent_path, $key),
+                    $template
+                );
+                continue;
+            }
+
+            if (!iron_field_type_exists($field['type'])) {
+                _iron_schema_warning(
+                    sprintf('type inconnu « %s » sur le sous-champ « %s.%s ».', $field['type'], $parent_path, $key),
+                    $template
+                );
+                continue;
+            }
+
+            $type = iron_field_type($field['type']);
+
+            $fields[$key] = [
+                'key'     => $key,
+                'type'    => $field['type'],
+                'label'   => isset($field['label']) ? (string) $field['label'] : _iron_humanize($key),
+                'desc'    => isset($field['desc']) ? (string) $field['desc'] : '',
+                'default' => array_key_exists('default', $field) ? $field['default'] : $type['default'],
+            ];
+        }
+
+        return $fields;
     }
 }
 

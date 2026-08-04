@@ -76,6 +76,19 @@ if (!function_exists('iron_field_types')) {
                 'label_for' => false,
             ],
 
+            'repeater' => [
+                // Le seul type composite : sa valeur est une liste de lignes,
+                // chaque ligne étant un tableau de sous-champs. Stockée telle
+                // quelle — WordPress sérialise les tableaux de meta et
+                // d'option nativement, inutile d'encoder en JSON par-dessus.
+                'label'     => __('Liste répétable', 'ironframe'),
+                'default'   => [],
+                'sanitize'  => 'iron_sanitize_repeater',
+                'render'    => 'iron_render_repeater_field',
+                'escape'    => 'iron_escape_repeater',
+                'label_for' => false,
+            ],
+
         ];
 
         /**
@@ -189,6 +202,97 @@ if (!function_exists('iron_sanitize_link')) {
     }
 }
 
+if (!function_exists('iron_sanitize_repeater')) {
+    /**
+     * Nettoie une liste répétable, ligne par ligne et sous-champ par
+     * sous-champ.
+     *
+     * Les lignes sont réindexées : le formulaire peut renvoyer des index
+     * troués (ligne supprimée) ou réordonnés (déplacement), l'ordre retenu est
+     * celui de la soumission.
+     *
+     * Une ligne entièrement vide est conservée. La supprimer en douce ferait
+     * disparaître une ligne que le client venait d'ajouter, ce qui ressemble à
+     * un bug.
+     *
+     * @param mixed      $value
+     * @param array|null $field Définition du répétable, avec ses sous-champs.
+     * @return array
+     */
+    function iron_sanitize_repeater($value, $field = null)
+    {
+        if (!is_array($value) || !is_array($field) || empty($field['fields'])) {
+            return [];
+        }
+
+        $rows = [];
+
+        foreach ($value as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $clean = [];
+
+            foreach ($field['fields'] as $key => $sub_field) {
+                $clean[$key] = array_key_exists($key, $row)
+                    ? iron_sanitize_field_value($row[$key], $sub_field)
+                    : $sub_field['default'];
+            }
+
+            $rows[] = $clean;
+        }
+
+        if (!empty($field['max']) && count($rows) > $field['max']) {
+            $rows = array_slice($rows, 0, (int) $field['max']);
+        }
+
+        return $rows;
+    }
+}
+
+if (!function_exists('iron_escape_repeater')) {
+    /**
+     * Échappe chaque valeur de chaque ligne selon le type de son sous-champ.
+     *
+     * @param mixed      $value
+     * @param array|null $field
+     * @return array
+     */
+    function iron_escape_repeater($value, $field = null)
+    {
+        if (!is_array($value) || !is_array($field) || empty($field['fields'])) {
+            return [];
+        }
+
+        $rows = [];
+
+        foreach ($value as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $escaped = [];
+
+            foreach ($field['fields'] as $key => $sub_field) {
+                $sub_type = iron_field_type($sub_field['type']);
+
+                if (!$sub_type || !isset($sub_type['escape']) || !is_callable($sub_type['escape'])) {
+                    continue;
+                }
+
+                $raw = array_key_exists($key, $row) ? $row[$key] : $sub_field['default'];
+
+                $escaped[$key] = call_user_func($sub_type['escape'], $raw, $sub_field);
+            }
+
+            $rows[] = $escaped;
+        }
+
+        return $rows;
+    }
+}
+
 if (!function_exists('iron_sanitize_field_value')) {
     /**
      * Applique le nettoyage correspondant au type d'un champ.
@@ -205,7 +309,10 @@ if (!function_exists('iron_sanitize_field_value')) {
             return '';
         }
 
-        return call_user_func($type['sanitize'], $value);
+        // La définition du champ est passée en second argument : les types
+        // simples l'ignorent, le répétable en a besoin pour connaître ses
+        // sous-champs.
+        return call_user_func($type['sanitize'], $value, $field);
     }
 }
 
