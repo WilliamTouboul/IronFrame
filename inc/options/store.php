@@ -42,6 +42,49 @@ if (!function_exists('iron_get_raw_option')) {
     }
 }
 
+if (!function_exists('iron_option_is_enabled')) {
+    /**
+     * Une section des réglages du site est-elle affichée ?
+     *
+     * @param string $group
+     * @return bool
+     */
+    function iron_option_is_enabled($group)
+    {
+        $schema = iron_get_options_schema();
+
+        if (!isset($schema[$group]) || empty($schema[$group]['toggle'])) {
+            return true;
+        }
+
+        static $sentinel = null;
+
+        if (null === $sentinel) {
+            $sentinel = new stdClass();
+        }
+
+        $value = get_option(iron_option_group_toggle_name($group), $sentinel);
+
+        if ($value === $sentinel) {
+            return $schema[$group]['toggle_default'];
+        }
+
+        return '1' === (string) $value;
+    }
+}
+
+if (!function_exists('iron_save_option_group_toggle')) {
+    /**
+     * @param string $group
+     * @param bool   $enabled
+     * @return void
+     */
+    function iron_save_option_group_toggle($group, $enabled)
+    {
+        update_option(iron_option_group_toggle_name($group), $enabled ? '1' : '0', true);
+    }
+}
+
 if (!function_exists('iron_save_raw_option')) {
     /**
      * Nettoie puis enregistre une option globale.

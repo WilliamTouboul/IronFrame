@@ -13,6 +13,18 @@ defined('ABSPATH') || exit;
 iron_header();
 ?>
 
+<?php
+// Section désactivable : quand le client décoche la case dans l'administration,
+// iron_has() renvoie faux et le bandeau disparaît. Aucun test supplémentaire à
+// écrire ici.
+?>
+<?php if (iron_has('promo.title')) : ?>
+    <aside class="promo">
+        <p class="promo__message"><?= iron_field('promo.title') ?></p>
+        <?= iron_link('promo.cta', ['class' => 'promo__link']) ?>
+    </aside>
+<?php endif; ?>
+
 <section class="hero">
 
     <?php if (iron_has('hero.image')) : ?>

@@ -47,6 +47,24 @@ if (!function_exists('iron_meta_key')) {
  */
 define('IRON_OPTION_PREFIX', 'iron_opt_');
 
+if (!function_exists('iron_group_toggle_key')) {
+    /**
+     * Clé de meta portant l'interrupteur d'affichage d'un groupe.
+     *
+     * Le suffixe utilise un tiret, caractère **interdit dans un identifiant**
+     * de groupe ou de champ. C'est ce qui rend la collision impossible : sans
+     * lui, un groupe nommé `hero_title` et un champ `hero.title` produiraient
+     * exactement la même clé.
+     *
+     * @param string $group
+     * @return string Ex. `_iron_promo-on`.
+     */
+    function iron_group_toggle_key($group)
+    {
+        return IRON_META_PREFIX . $group . '-on';
+    }
+}
+
 if (!function_exists('iron_option_name')) {
     /**
      * Construit le nom d'option d'un champ global.
@@ -58,6 +76,19 @@ if (!function_exists('iron_option_name')) {
     function iron_option_name($group, $field)
     {
         return IRON_OPTION_PREFIX . $group . '_' . $field;
+    }
+}
+
+if (!function_exists('iron_option_group_toggle_name')) {
+    /**
+     * Nom d'option portant l'interrupteur d'affichage d'un groupe global.
+     *
+     * @param string $group
+     * @return string Ex. `iron_opt_promo-on`.
+     */
+    function iron_option_group_toggle_name($group)
+    {
+        return IRON_OPTION_PREFIX . $group . '-on';
     }
 }
 
@@ -315,13 +346,14 @@ if (!function_exists('_iron_normalize_schema')) {
                 }
 
                 $fields[$field_key] = array_merge([
-                    'key'     => $field_key,
-                    'group'   => $group_key,
-                    'path'    => $group_key . '.' . $field_key,
-                    'type'    => $field['type'],
-                    'label'   => isset($field['label']) ? (string) $field['label'] : _iron_humanize($field_key),
-                    'desc'    => isset($field['desc']) ? (string) $field['desc'] : '',
-                    'default' => array_key_exists('default', $field) ? $field['default'] : $type['default'],
+                    'key'      => $field_key,
+                    'group'    => $group_key,
+                    'path'     => $group_key . '.' . $field_key,
+                    'type'     => $field['type'],
+                    'label'    => isset($field['label']) ? (string) $field['label'] : _iron_humanize($field_key),
+                    'desc'     => isset($field['desc']) ? (string) $field['desc'] : '',
+                    'default'  => array_key_exists('default', $field) ? $field['default'] : $type['default'],
+                    'required' => !empty($field['required']),
                 ], $storage, $extra);
             }
 
@@ -333,6 +365,18 @@ if (!function_exists('_iron_normalize_schema')) {
                 'key'    => $group_key,
                 'label'  => isset($group['label']) ? (string) $group['label'] : _iron_humanize($group_key),
                 'fields' => $fields,
+
+                // Interrupteur d'affichage de la section. `toggle_default`
+                // vaut vrai : une section que le développeur vient d'ajouter
+                // doit se voir, sans quoi il la croira cassée. C'est au client
+                // de la masquer quand elle n'a plus lieu d'être.
+                'toggle'         => !empty($group['toggle']),
+                'toggle_default' => !isset($group['toggle_default']) || (bool) $group['toggle_default'],
+                'label_toggle'   => isset($group['label_toggle'])
+                    ? (string) $group['label_toggle']
+                    : __('Afficher cette section sur le site', 'ironframe'),
+
+                'storage' => $context,
             ];
         }
 
@@ -398,6 +442,13 @@ if (!function_exists('_iron_normalize_subfields')) {
                     $template
                 );
                 continue;
+            }
+
+            if (!empty($field['required'])) {
+                _iron_schema_warning(
+                    sprintf('« %s.%s » : `required` n\'est pas géré sur un sous-champ de liste répétable, la clé est ignorée.', $parent_path, $key),
+                    $template
+                );
             }
 
             $type = iron_field_type($field['type']);

@@ -75,7 +75,16 @@ if (!function_exists('iron_render_options_page')) {
                 <?php esc_html_e('Ces informations sont utilisées partout sur le site. Les modifier ici les met à jour sur toutes les pages.', 'ironframe'); ?>
             </p>
 
-            <?php if (isset($_GET['iron-updated'])) : ?>
+            <?php
+            $errors = iron_take_errors(IRON_OPTIONS_PAGE);
+
+            iron_render_error_notice(
+                $errors,
+                __('Ces champs sont obligatoires et n\'ont pas été enregistrés vides. Leur valeur précédente a été conservée.', 'ironframe')
+            );
+            ?>
+
+            <?php if (isset($_GET['iron-updated']) && !$errors) : ?>
                 <div class="notice notice-success is-dismissible">
                     <p><?php esc_html_e('Réglages enregistrés.', 'ironframe'); ?></p>
                 </div>
@@ -92,6 +101,11 @@ if (!function_exists('iron_render_options_page')) {
                         <h2 class="hndle"><span><?php echo esc_html($group['label']); ?></span></h2>
 
                         <div class="inside">
+                            <?php
+                            if (!empty($group['toggle'])) {
+                                iron_render_group_toggle($group, iron_option_is_enabled($group['key']));
+                            }
+                            ?>
                             <div class="iron-fields">
                                 <?php
                                 foreach ($group['fields'] as $field) {
@@ -128,17 +142,10 @@ if (!function_exists('iron_render_option_field')) {
             return;
         }
 
-        $label_for = !isset($type['label_for']) || false !== $type['label_for'];
         ?>
         <div class="iron-field iron-field--<?php echo esc_attr($field['type']); ?>">
 
-            <?php if ($label_for) : ?>
-                <label class="iron-field__label" for="<?php echo esc_attr(iron_field_input_id($field)); ?>">
-                    <?php echo esc_html($field['label']); ?>
-                </label>
-            <?php else : ?>
-                <span class="iron-field__label"><?php echo esc_html($field['label']); ?></span>
-            <?php endif; ?>
+            <?php iron_render_field_label($field); ?>
 
             <div class="iron-field__control">
                 <?php call_user_func($type['render'], $field, iron_get_raw_option($field)); ?>
@@ -170,11 +177,19 @@ if (!function_exists('iron_handle_options_save')) {
 
         check_admin_referer('iron_save_options');
 
-        $submitted = isset($_POST['iron']) && is_array($_POST['iron'])
-            ? wp_unslash($_POST['iron'])
-            : [];
+        $submitted = _iron_submitted_values();
+        $toggles   = _iron_submitted_toggles();
+        $schema    = iron_get_options_schema();
 
-        foreach (iron_flatten_schema(iron_get_options_schema()) as $field) {
+        foreach ($toggles as $group_key => $enabled) {
+            if (isset($schema[$group_key]) && !empty($schema[$group_key]['toggle'])) {
+                iron_save_option_group_toggle($group_key, $enabled);
+            }
+        }
+
+        $errors = iron_collect_required_errors($schema, $submitted, $toggles);
+
+        foreach (iron_flatten_schema($schema) as $field) {
 
             $group = $field['group'];
             $key   = $field['key'];
@@ -187,8 +202,16 @@ if (!function_exists('iron_handle_options_save')) {
                 continue;
             }
 
+            // Même règle que pour les pages : un champ obligatoire soumis vide
+            // n'écrase pas une valeur existante.
+            if (isset($errors[$field['path']]) && iron_value_is_filled(iron_get_raw_option($field), $field)) {
+                continue;
+            }
+
             iron_save_raw_option($field, $submitted[$group][$key]);
         }
+
+        iron_store_errors(IRON_OPTIONS_PAGE, $errors);
 
         wp_safe_redirect(add_query_arg(
             ['page' => IRON_OPTIONS_PAGE, 'iron-updated' => '1'],

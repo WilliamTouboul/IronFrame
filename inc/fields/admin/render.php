@@ -49,6 +49,43 @@ if (!function_exists('iron_field_input_id')) {
     }
 }
 
+if (!function_exists('iron_render_field_label')) {
+    /**
+     * Libellé d'un champ, avec son marqueur d'obligation.
+     *
+     * Partagé par les meta boxes, l'écran des réglages et les lignes de
+     * répétable, pour que les trois se ressemblent sans effort.
+     *
+     * Un type composé comme l'image ou le lien ne cible aucun contrôle précis :
+     * son libellé n'est donc pas une balise `label`, qui pointerait dans le
+     * vide pour un lecteur d'écran.
+     *
+     * @param array $field
+     * @return void
+     */
+    function iron_render_field_label(array $field)
+    {
+        $type      = iron_field_type($field['type']);
+        $label_for = !$type || !isset($type['label_for']) || false !== $type['label_for'];
+        $required  = !empty($field['required']);
+
+        $tag        = $label_for ? 'label' : 'span';
+        $attributes = $label_for
+            ? sprintf(' for="%s"', esc_attr(iron_field_input_id($field)))
+            : '';
+
+        printf(
+            '<%1$s class="iron-field__label"%2$s>%3$s%4$s</%1$s>',
+            $tag,
+            $attributes,
+            esc_html($field['label']),
+            $required
+                ? ' <span class="iron-field__required" title="' . esc_attr__('Champ obligatoire', 'ironframe') . '">*</span>'
+                : ''
+        );
+    }
+}
+
 if (!function_exists('iron_render_text_field')) {
     /**
      * @param array $field
@@ -235,18 +272,10 @@ if (!function_exists('iron_render_repeater_row')) {
                     );
 
                     $sub_value = array_key_exists($key, $row) ? $row[$key] : $sub_field['default'];
-
-                    $label_for = !isset($sub_type['label_for']) || false !== $sub_type['label_for'];
                     ?>
                     <div class="iron-field iron-field--<?php echo esc_attr($sub_field['type']); ?>">
 
-                        <?php if ($label_for) : ?>
-                            <label class="iron-field__label" for="<?php echo esc_attr(iron_field_input_id($sub_field)); ?>">
-                                <?php echo esc_html($sub_field['label']); ?>
-                            </label>
-                        <?php else : ?>
-                            <span class="iron-field__label"><?php echo esc_html($sub_field['label']); ?></span>
-                        <?php endif; ?>
+                        <?php iron_render_field_label($sub_field); ?>
 
                         <div class="iron-field__control">
                             <?php call_user_func($sub_type['render'], $sub_field, $sub_value); ?>

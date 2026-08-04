@@ -507,6 +507,17 @@ if (!function_exists('_iron_resolve_field')) {
             return null;
         }
 
+        // Section masquée par le client : tout se comporte comme si les champs
+        // étaient vides. Aucun avertissement, ce n'est pas une erreur.
+        //
+        // Ce point de contrôle unique suffit parce que toutes les fonctions
+        // publiques de lecture passent par ici : `iron_has()` renvoie faux,
+        // `iron_field()` une chaîne vide, `iron_rows()` un tableau vide. Les
+        // templates existants n'ont rien à changer.
+        if (!iron_is_enabled($field['group'], $post)) {
+            return null;
+        }
+
         if ('' !== $expected_type && $expected_type !== $field['type']) {
             _iron_debug_warning(sprintf(
                 'le champ « %s » est de type « %s », mais il est lu comme un « %s ».',

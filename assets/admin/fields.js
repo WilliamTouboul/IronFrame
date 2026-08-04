@@ -226,7 +226,37 @@
         refresh(repeater);
     });
 
+    /* ---------------------------------------------------------------------- */
+    /* Interrupteur de section                                                */
+    /* ---------------------------------------------------------------------- */
+
+    /**
+     * Les champs d'une section masquée restent modifiables : le client peut
+     * préparer son contenu avant de l'afficher. On atténue simplement leur
+     * rendu pour qu'il voie d'un coup d'oeil ce qui ne sortira pas sur le site.
+     */
+    function refreshGroupToggle(checkbox) {
+        var box = checkbox.closest('.postbox') || checkbox.closest('.iron-options__group');
+
+        if (!box) {
+            return;
+        }
+
+        box.querySelectorAll('.iron-fields').forEach(function (fields) {
+            fields.classList.toggle('iron-fields--off', !checkbox.checked);
+        });
+    }
+
+    document.addEventListener('change', function (event) {
+        var checkbox = event.target.closest('[data-iron-group-toggle]');
+
+        if (checkbox) {
+            refreshGroupToggle(checkbox);
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[data-iron-repeater]').forEach(refresh);
+        document.querySelectorAll('[data-iron-group-toggle]').forEach(refreshGroupToggle);
     });
 }());

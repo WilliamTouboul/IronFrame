@@ -38,8 +38,9 @@ $iron_modules = [
 
 // Modules réservés à l'écran d'administration.
 if (is_admin()) {
-    $iron_modules[] = 'inc/fields/admin/render.php';    // Brique 2 — contrôles de formulaire.
-    $iron_modules[] = 'inc/fields/admin/meta-box.php';  // Brique 2 — meta boxes et sauvegarde.
+    $iron_modules[] = 'inc/fields/admin/render.php';     // Brique 2 — contrôles de formulaire.
+    $iron_modules[] = 'inc/fields/admin/validation.php'; // Champs obligatoires et messages.
+    $iron_modules[] = 'inc/fields/admin/meta-box.php';   // Brique 2 — meta boxes et sauvegarde.
     $iron_modules[] = 'inc/fields/admin/assets.php';    // Brique 2 — CSS et JS d'admin.
     $iron_modules[] = 'inc/options/admin.php';          // Brique 6 — écran des options globales.
     $iron_modules[] = 'inc/client/admin-ui.php';        // Brique 5 — épuration de l'admin.

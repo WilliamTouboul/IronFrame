@@ -207,6 +207,11 @@ if (!function_exists('_iron_resolve_option')) {
             return null;
         }
 
+        // Section masquée : voir le commentaire équivalent dans fields/api.php.
+        if (!iron_option_is_enabled($field['group'])) {
+            return null;
+        }
+
         if ('' !== $expected_type && $expected_type !== $field['type']) {
             _iron_debug_warning(sprintf(
                 'l\'option « %s » est de type « %s », mais elle est lue comme un « %s ».',

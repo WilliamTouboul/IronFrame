@@ -391,6 +391,31 @@ if (!function_exists('iron_link_is_filled')) {
     }
 }
 
+if (!function_exists('iron_value_is_filled')) {
+    /**
+     * Une valeur est-elle considérée comme remplie pour son type ?
+     *
+     * Le vide n'a pas la même forme selon les types : une chaîne vide, un
+     * identifiant de média à zéro, un lien sans adresse, une liste sans ligne.
+     * Les types qui ne se contentent pas d'un test générique déclarent un
+     * callback `is_filled`.
+     *
+     * @param mixed $value
+     * @param array $field Champ normalisé.
+     * @return bool
+     */
+    function iron_value_is_filled($value, array $field)
+    {
+        $type = iron_field_type($field['type']);
+
+        if ($type && isset($type['is_filled']) && is_callable($type['is_filled'])) {
+            return (bool) call_user_func($type['is_filled'], $value);
+        }
+
+        return !empty($value);
+    }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Diagnostic                                                                 */
 /* -------------------------------------------------------------------------- */

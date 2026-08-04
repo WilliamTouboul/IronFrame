@@ -55,6 +55,10 @@ if (!function_exists('iron_render_meta_box')) {
 
         wp_nonce_field('iron_save_fields_' . $post->ID, 'iron_fields_nonce');
 
+        if (!empty($group['toggle'])) {
+            iron_render_group_toggle($group, iron_is_enabled($group['key'], $post));
+        }
+
         echo '<div class="iron-fields">';
 
         foreach ($group['fields'] as $field) {
@@ -65,17 +69,10 @@ if (!function_exists('iron_render_meta_box')) {
                 continue;
             }
 
-            $label_for = !isset($type['label_for']) || false !== $type['label_for'];
             ?>
             <div class="iron-field iron-field--<?php echo esc_attr($field['type']); ?>">
 
-                <?php if ($label_for) : ?>
-                    <label class="iron-field__label" for="<?php echo esc_attr(iron_field_input_id($field)); ?>">
-                        <?php echo esc_html($field['label']); ?>
-                    </label>
-                <?php else : ?>
-                    <span class="iron-field__label"><?php echo esc_html($field['label']); ?></span>
-                <?php endif; ?>
+                <?php iron_render_field_label($field); ?>
 
                 <div class="iron-field__control">
                     <?php call_user_func($type['render'], $field, iron_get_raw_value($field, $post)); ?>
@@ -90,6 +87,40 @@ if (!function_exists('iron_render_meta_box')) {
         }
 
         echo '</div>';
+    }
+}
+
+if (!function_exists('iron_render_group_toggle')) {
+    /**
+     * Interrupteur d'affichage d'une section.
+     *
+     * Le champ caché qui accompagne la case n'est pas décoratif : une case
+     * décochée n'est pas transmise par le navigateur, et sans ce témoin on ne
+     * pourrait pas distinguer « décoché par le client » de « meta box absente
+     * de l'écran ».
+     *
+     * @param array $group   Groupe normalisé.
+     * @param bool  $enabled État courant.
+     * @return void
+     */
+    function iron_render_group_toggle(array $group, $enabled)
+    {
+        ?>
+        <p class="iron-group-toggle">
+            <input type="hidden"
+                   name="iron_toggle_shown[<?php echo esc_attr($group['key']); ?>]"
+                   value="1">
+
+            <label>
+                <input type="checkbox"
+                       name="iron_toggle[<?php echo esc_attr($group['key']); ?>]"
+                       value="1"
+                       data-iron-group-toggle
+                       <?php checked($enabled); ?>>
+                <?php echo esc_html($group['label_toggle']); ?>
+            </label>
+        </p>
+        <?php
     }
 }
 
@@ -135,11 +166,20 @@ if (!function_exists('iron_save_fields')) {
             return;
         }
 
-        $submitted = isset($_POST['iron']) && is_array($_POST['iron'])
-            ? wp_unslash($_POST['iron'])
-            : [];
+        $submitted = _iron_submitted_values();
+        $toggles   = _iron_submitted_toggles();
+        $schema    = iron_get_post_schema($post);
 
-        foreach (iron_flatten_schema(iron_get_post_schema($post)) as $field) {
+        // Interrupteurs de section.
+        foreach ($toggles as $group_key => $enabled) {
+            if (isset($schema[$group_key]) && !empty($schema[$group_key]['toggle'])) {
+                iron_save_group_toggle($group_key, $enabled, $post_id);
+            }
+        }
+
+        $errors = iron_collect_required_errors($schema, $submitted, $toggles);
+
+        foreach (iron_flatten_schema($schema) as $field) {
 
             $group = $field['group'];
             $key   = $field['key'];
@@ -152,8 +192,17 @@ if (!function_exists('iron_save_fields')) {
                 continue;
             }
 
+            // Un champ obligatoire soumis vide n'écrase pas ce qui existe :
+            // la page reste affichable. Le message d'erreur, lui, est
+            // indispensable — une correction silencieuse serait pire.
+            if (isset($errors[$field['path']]) && iron_value_is_filled(iron_get_raw_value($field, $post_id), $field)) {
+                continue;
+            }
+
             iron_save_raw_value($field, $submitted[$group][$key], $post_id);
         }
+
+        iron_store_errors($post_id, $errors);
     }
 }
 add_action('save_post_page', 'iron_save_fields', 10, 2);

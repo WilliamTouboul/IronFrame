@@ -22,12 +22,32 @@ defined('ABSPATH') || exit;
 
 return [
 
+    // Section désactivable : le client coche pour l'afficher, décoche pour la
+    // masquer. Typiquement un bandeau saisonnier.
+    'promo' => [
+        'label'        => 'Bandeau de promotion',
+        'toggle'       => true,
+        'label_toggle' => 'Afficher le bandeau sur le site',
+        'fields'       => [
+            'title' => [
+                'type'     => 'text',
+                'label'    => 'Message',
+                'required' => true,
+            ],
+            'cta' => [
+                'type'  => 'link',
+                'label' => 'Bouton',
+            ],
+        ],
+    ],
+
     'hero' => [
         'label'  => 'Bannière',
         'fields' => [
             'title' => [
-                'type'  => 'text',
-                'label' => 'Titre principal',
+                'type'     => 'text',
+                'label'    => 'Titre principal',
+                'required' => true,
             ],
             'text' => [
                 'type'  => 'textarea',

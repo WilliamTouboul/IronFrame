@@ -42,6 +42,57 @@ if (!function_exists('iron_get_raw_value')) {
     }
 }
 
+if (!function_exists('iron_is_enabled')) {
+    /**
+     * Une section est-elle affichée sur le site ?
+     *
+     * Toujours vrai pour un groupe qui ne déclare pas d'interrupteur : la
+     * fonction peut donc être appelée sans condition.
+     *
+     * @param string           $group Identifiant du groupe.
+     * @param int|WP_Post|null $post
+     * @return bool
+     */
+    function iron_is_enabled($group, $post = null)
+    {
+        $schema = iron_get_post_schema($post);
+
+        if (!isset($schema[$group]) || empty($schema[$group]['toggle'])) {
+            return true;
+        }
+
+        $default = $schema[$group]['toggle_default'];
+        $post    = get_post($post);
+
+        if (!$post) {
+            return $default;
+        }
+
+        $key = iron_group_toggle_key($group);
+
+        if (!metadata_exists('post', $post->ID, $key)) {
+            return $default;
+        }
+
+        return '1' === (string) get_post_meta($post->ID, $key, true);
+    }
+}
+
+if (!function_exists('iron_save_group_toggle')) {
+    /**
+     * Enregistre l'état de l'interrupteur d'une section.
+     *
+     * @param string $group
+     * @param bool   $enabled
+     * @param int    $post_id
+     * @return void
+     */
+    function iron_save_group_toggle($group, $enabled, $post_id)
+    {
+        update_post_meta($post_id, iron_group_toggle_key($group), $enabled ? '1' : '0');
+    }
+}
+
 if (!function_exists('iron_save_raw_value')) {
     /**
      * Nettoie puis enregistre la valeur d'un champ.
