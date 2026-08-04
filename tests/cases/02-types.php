@@ -11,7 +11,11 @@ iron_test('Le texte est nettoyé et échappé', function () {
 
     $field = iron_test_field('basic.title');
 
-    iron_assert_same('alert(1)Bonjour', iron_sanitize_field_value('<script>alert(1)</script>Bonjour', $field), 'balise script retirée');
+    // WordPress supprime le bloc <script> AVEC son contenu, puis retire les
+    // balises restantes. Le code du script ne subsiste donc pas sous forme de
+    // texte, ce qui est plus sûr qu'un simple strip_tags().
+    iron_assert_same('Bonjour', iron_sanitize_field_value('<script>alert(1)</script>Bonjour', $field), 'script supprimé avec son contenu');
+    iron_assert_same('gras', iron_sanitize_field_value('<b>gras</b>', $field), 'balise ordinaire retirée, texte conservé');
     iron_assert_same('Bonjour', iron_sanitize_field_value('  Bonjour  ', $field), 'espaces retirés');
     iron_assert_same('&lt;b&gt;', iron_escape_text('<b>'), 'échappement en sortie');
 });
@@ -84,7 +88,7 @@ iron_test('Les valeurs sont re-nettoyées à la LECTURE', function () {
     // ferait un import, une migration ou WP-CLI.
     update_post_meta($page, $field['meta_key'], '<script>alert(1)</script>Bonjour');
 
-    iron_assert_same('alert(1)Bonjour', iron_get_raw_value($field, $page), 'la valeur brute est déjà assainie');
+    iron_assert_same('Bonjour', iron_get_raw_value($field, $page), 'la valeur brute est déjà assainie');
     iron_assert_not_contains('<script', iron_field('basic.title', $page), 'rien de dangereux en sortie');
 
     $lien = iron_test_field('basic.cta');

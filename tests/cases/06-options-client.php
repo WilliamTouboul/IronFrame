@@ -39,7 +39,7 @@ iron_test('Une option s\'écrit et se relit avec les mêmes garanties', function
 
     iron_save_raw_option($field, '<script>x</script>Bonjour');
 
-    iron_assert_same('xBonjour', iron_get_raw_option($field), 'nettoyé à l\'écriture');
+    iron_assert_same('Bonjour', iron_get_raw_option($field), 'nettoyé à l\'écriture');
     iron_assert_same('', iron_get_raw_option(array_merge($field, ['option_name' => 'iron_opt_inexistante'])), 'option jamais enregistrée');
 
     delete_option($field['option_name']);

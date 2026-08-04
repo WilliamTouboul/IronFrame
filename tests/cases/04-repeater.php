@@ -74,8 +74,8 @@ iron_test('Les lignes exposées au template sont sûres', function () {
     $lignes = iron_rows('listing.rows', $page);
 
     iron_assert_same(1, count($lignes), 'une ligne lue');
-    iron_assert_same('xAudit', $lignes[0]['name'], 'accès direct déjà échappé');
-    iron_assert_same('xAudit', iron_row($lignes[0], 'name'), 'iron_row équivalent');
+    iron_assert_same('Audit', $lignes[0]['name'], 'accès direct déjà échappé');
+    iron_assert_same('Audit', iron_row($lignes[0], 'name'), 'iron_row équivalent');
     iron_assert_same('b', $lignes[0]['kind'], 'liste de choix dans une ligne');
 
     iron_assert_true(iron_row_has($lignes[0], 'pic'), 'image présente');
