@@ -11,6 +11,9 @@ le client voudra installer : SEO, multilingue, formulaires.
 
 **Aucune étape de build.** Ni npm, ni Composer, ni Sass à compiler.
 
+> Avant de juger ce qu'Ironframe ne fait pas, lisez [MANIFESTE.md](MANIFESTE.md).
+> Chaque limite y est assumée, et la contrepartie annoncée.
+
 ---
 
 ## Prérequis
