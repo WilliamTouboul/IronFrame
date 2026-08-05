@@ -45,7 +45,7 @@ if (!function_exists('iron_client_clean_menu')) {
             return;
         }
 
-        global $menu;
+        global $menu, $submenu, $_wp_menu_nopriv, $_wp_submenu_nopriv;
 
         if (!is_array($menu)) {
             return;
@@ -58,14 +58,64 @@ if (!function_exists('iron_client_clean_menu')) {
                 continue;
             }
 
-            if (!in_array($item[2], $allowed, true)) {
-                // Retire aussi les séparateurs, qui laisseraient des trous.
-                remove_menu_page($item[2]);
+            if (in_array($item[2], $allowed, true)) {
+                continue;
+            }
+
+            // Retire aussi les séparateurs, qui laisseraient des trous.
+            remove_menu_page($item[2]);
+
+            // `remove_menu_page()` ne touche pas au sous-menu : sans ça, il
+            // resterait orphelin dans `$submenu`.
+            if (is_array($submenu) && isset($submenu[$item[2]])) {
+                unset($submenu[$item[2]]);
             }
         }
     }
 }
 add_action('admin_menu', 'iron_client_clean_menu', 999);
+
+if (!function_exists('iron_client_unlock_pages_screen')) {
+    /**
+     * Rend la liste des pages accessible au client.
+     *
+     * Sans ceci, le client voit le menu « Pages » mais reçoit une erreur 403
+     * en cliquant dessus. Le comportement vient de WordPress, pas d'Ironframe :
+     * il se produit pour n'importe quel rôle capable de modifier les pages
+     * sans pouvoir modifier les articles.
+     *
+     * Le mécanisme, dans `user_can_access_admin_page()` :
+     *
+     *   foreach ( array_keys( $_wp_submenu_nopriv ) as $key ) {
+     *       if ( isset( $_wp_submenu_nopriv[ $key ][ $pagenow ] ) ) return false;
+     *   }
+     *
+     * WordPress cherche le fichier demandé parmi TOUS les écrans refusés, sans
+     * vérifier qu'il s'agit du bon parent. Or la liste des articles et la liste
+     * des pages sont **le même fichier**, `edit.php` : ne pas avoir le droit de
+     * modifier les articles fait refuser les deux.
+     *
+     * On retire donc ce seul refus, et rien d'autre. La liste des articles
+     * reste inaccessible — `edit.php` vérifie lui-même `edit_posts` et répond
+     * 403. On ne touche ni aux autres refus, ni à `$_wp_menu_nopriv`, qui
+     * protège les écrans de premier niveau.
+     *
+     * @return void
+     */
+    function iron_client_unlock_pages_screen()
+    {
+        if (!iron_user_is_client()) {
+            return;
+        }
+
+        global $_wp_submenu_nopriv;
+
+        if (isset($_wp_submenu_nopriv['edit.php']['edit.php'])) {
+            unset($_wp_submenu_nopriv['edit.php']['edit.php']);
+        }
+    }
+}
+add_action('admin_menu', 'iron_client_unlock_pages_screen', 999);
 
 if (!function_exists('iron_client_clean_admin_bar')) {
     /**

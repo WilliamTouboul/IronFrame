@@ -51,6 +51,8 @@ foreach ([
     'inc/fields/admin/validation.php',
     'inc/fields/admin/meta-box.php',
     'inc/options/admin.php',
+    'inc/fields/admin/columns.php',
+    'inc/client/admin-ui.php',
 ] as $iron_admin_module) {
     require_once IRON_PATH . '/' . $iron_admin_module;
 }

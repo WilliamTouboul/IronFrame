@@ -77,6 +77,131 @@ iron_test('Les administrateurs conservent le droit de créer des pages', functio
     iron_assert_same(IRON_CAP_CREATE_PAGES, get_post_type_object('page')->cap->create_posts, 'capacité de création basculée sur le type page');
 });
 
+iron_test('La liste des pages reste accessible au client', function () {
+
+    /*
+     * Régression. WordPress refuse un écran dès qu'un écran INTERDIT porte le
+     * même nom de fichier, sans vérifier le parent. La liste des articles et la
+     * liste des pages sont toutes deux `edit.php` : un client qui n'a pas le
+     * droit de modifier les articles se voyait refuser ses propres pages, avec
+     * une erreur 403 alors même que le menu s'affichait.
+     */
+    $client_id = wp_insert_user([
+        'user_login' => 'iron_test_menu_' . wp_generate_password(6, false),
+        'user_pass'  => wp_generate_password(24),
+        'user_email' => 'iron-menu-' . wp_generate_password(6, false) . '@example.invalid',
+        'role'       => IRON_ROLE_CLIENT,
+    ]);
+
+    if (is_wp_error($client_id)) {
+        iron_assert_true(false, 'création du client de test');
+
+        return;
+    }
+
+    $precedent = get_current_user_id();
+
+    global $_wp_submenu_nopriv;
+
+    $sauvegarde = $_wp_submenu_nopriv;
+
+    // Ce que WordPress enregistre pour un rôle sans droit sur les articles.
+    $_wp_submenu_nopriv = [
+        'edit.php' => [
+            'edit.php'     => true,
+            'post-new.php' => true,
+        ],
+        'themes.php' => ['themes.php' => true],
+    ];
+
+    wp_set_current_user($precedent);
+    iron_client_unlock_pages_screen();
+
+    iron_assert_true(
+        isset($_wp_submenu_nopriv['edit.php']['edit.php']),
+        'un administrateur ne déclenche pas la compensation'
+    );
+
+    wp_set_current_user($client_id);
+    iron_client_unlock_pages_screen();
+
+    iron_assert_false(
+        isset($_wp_submenu_nopriv['edit.php']['edit.php']),
+        'le refus qui bloquait la liste des pages est levé'
+    );
+
+    iron_assert_true(
+        isset($_wp_submenu_nopriv['edit.php']['post-new.php']),
+        'la création d\'article reste refusée'
+    );
+
+    iron_assert_true(
+        isset($_wp_submenu_nopriv['themes.php']['themes.php']),
+        'les autres refus sont intacts'
+    );
+
+    $_wp_submenu_nopriv = $sauvegarde;
+    wp_set_current_user($precedent);
+
+    require_once ABSPATH . 'wp-admin/includes/user.php';
+    wp_delete_user($client_id);
+});
+
+iron_test('Le nettoyage de menu emporte les sous-menus', function () {
+
+    $client_id = wp_insert_user([
+        'user_login' => 'iron_test_menu2_' . wp_generate_password(6, false),
+        'user_pass'  => wp_generate_password(24),
+        'user_email' => 'iron-menu2-' . wp_generate_password(6, false) . '@example.invalid',
+        'role'       => IRON_ROLE_CLIENT,
+    ]);
+
+    if (is_wp_error($client_id)) {
+        iron_assert_true(false, 'création du client de test');
+
+        return;
+    }
+
+    $precedent = get_current_user_id();
+
+    global $menu, $submenu;
+
+    $menu_sauve    = $menu;
+    $submenu_sauve = $submenu;
+
+    $menu = [
+        [ 'Articles', 'edit_posts', 'edit.php', '', '', '', '' ],
+        [ 'Pages', 'edit_pages', 'edit.php?post_type=page', '', '', '', '' ],
+        [ 'Extensions', 'activate_plugins', 'plugins.php', '', '', '', '' ],
+    ];
+
+    $submenu = [
+        'edit.php'               => [ [ 'Tous', 'edit_posts', 'edit.php' ] ],
+        'edit.php?post_type=page' => [ [ 'Toutes', 'edit_pages', 'edit.php?post_type=page' ] ],
+        'plugins.php'            => [ [ 'Installées', 'activate_plugins', 'plugins.php' ] ],
+    ];
+
+    wp_set_current_user($client_id);
+    iron_client_clean_menu();
+
+    $slugs = array_map(function ($item) { return $item[2]; }, $menu);
+
+    iron_assert_true(in_array('edit.php?post_type=page', $slugs, true), 'le menu Pages est conservé');
+    iron_assert_false(in_array('edit.php', $slugs, true), 'le menu Articles est retiré');
+    iron_assert_false(in_array('plugins.php', $slugs, true), 'le menu Extensions est retiré');
+
+    iron_assert_false(isset($submenu['edit.php']), 'le sous-menu Articles ne reste pas orphelin');
+    iron_assert_false(isset($submenu['plugins.php']), 'le sous-menu Extensions ne reste pas orphelin');
+    iron_assert_true(isset($submenu['edit.php?post_type=page']), 'le sous-menu Pages est conservé');
+
+    $menu    = $menu_sauve;
+    $submenu = $submenu_sauve;
+    wp_set_current_user($precedent);
+
+    require_once ABSPATH . 'wp-admin/includes/user.php';
+    wp_delete_user($client_id);
+});
+
 iron_test('Un client ne peut modifier ni le statut, ni le permalien, ni le template', function () {
 
     $page = iron_test_page();
