@@ -34,12 +34,24 @@ function iron_test_avec_enfant(callable $body)
     }
 }
 
-iron_test('Sans thème enfant, une seule racine', function () {
+iron_test('Les racines sont ordonnées, projet puis moteur', function () {
 
-    $roots = iron_theme_roots();
+    // Le test ne présume pas de la configuration : il doit passer avec ou sans
+    // thème enfant actif.
+    $roots  = iron_theme_roots();
+    $enfant = get_stylesheet_directory() !== get_template_directory();
 
-    iron_assert_same(1, count($roots), 'une racine');
-    iron_assert_same(realpath(IRON_PATH), realpath($roots[0]), 'c\'est le moteur');
+    iron_assert_true(count($roots) > 0, 'au moins une racine');
+    iron_assert_same($enfant ? 2 : 1, count($roots), 'une racine par thème actif');
+    iron_assert_same(realpath(IRON_PATH), realpath(end($roots)), 'le moteur est toujours en dernier');
+
+    if ($enfant) {
+        iron_assert_same(realpath(get_stylesheet_directory()), realpath($roots[0]), 'le projet passe en premier');
+    }
+
+    $reels = array_map('realpath', $roots);
+
+    iron_assert_same(count($reels), count(array_unique($reels)), 'aucune racine en double');
 });
 
 iron_test('Un fichier du projet masque celui du moteur', function () {

@@ -110,18 +110,20 @@ iron_test('Un répétable ne peut pas en contenir un autre', function () {
     iron_assert_true(isset($sous_champs['ok']), 'le sous-champ valide est conservé');
 });
 
-iron_test('Tous les gabarits livrés ont un schéma valide', function () {
+iron_test('Tous les gabarits actifs ont un schéma valide', function () {
 
-    $fichiers = glob(IRON_PATH . '/pages/*.fields.php');
+    // Parcourt les deux racines : les gabarits du projet comme ceux que le
+    // moteur pourrait encore fournir.
+    $fichiers = iron_glob('pages/*.fields.php');
 
-    iron_assert_true(count($fichiers) >= 4, 'le jeu de départ est présent');
+    iron_assert_true(count($fichiers) > 0, 'au moins un gabarit');
 
     foreach ($fichiers as $fichier) {
 
         $nom      = basename($fichier, '.fields.php');
         $template = 'pages/' . $nom . '.php';
 
-        iron_assert_true(file_exists(IRON_PATH . '/' . $template), sprintf('%s : le gabarit existe', $nom));
+        iron_assert_true('' !== iron_locate($template), sprintf('%s : le gabarit existe', $nom));
 
         $schema = iron_get_schema($template);
 
@@ -130,6 +132,41 @@ iron_test('Tous les gabarits livrés ont un schéma valide', function () {
         foreach ($schema as $groupe) {
             iron_assert_true(count($groupe['fields']) > 0, sprintf('%s : le groupe « %s » a des champs', $nom, $groupe['key']));
         }
+    }
+});
+
+iron_test('Le jeu de départ livré dans starter-child est valide', function () {
+
+    /*
+     * `starter-child/` n'est pas une racine de thème : c'est le modèle qu'on
+     * copie pour démarrer un projet. Ses schémas sont donc validés à la main,
+     * sans passer par la résolution parent / enfant.
+     */
+    $base     = IRON_PATH . '/starter-child';
+    $fichiers = glob($base . '/pages/*.fields.php');
+
+    iron_assert_same(4, count($fichiers), 'quatre gabarits de départ');
+
+    foreach ($fichiers as $fichier) {
+
+        $nom = basename($fichier, '.fields.php');
+
+        iron_assert_true(
+            file_exists($base . '/pages/' . $nom . '.php'),
+            sprintf('%s : le gabarit accompagne son schéma', $nom)
+        );
+
+        $schema = _iron_normalize_schema(require $fichier, 'starter-child/' . $nom);
+
+        iron_assert_true(count($schema) > 0, sprintf('%s : schéma valide', $nom));
+    }
+
+    foreach (glob($base . '/options/*.fields.php') as $fichier) {
+
+        $nom    = basename($fichier, '.fields.php');
+        $schema = _iron_normalize_schema(require $fichier, 'starter-child/options/' . $nom, 'option');
+
+        iron_assert_true(count($schema) > 0, sprintf('options %s : schéma valide', $nom));
     }
 });
 
