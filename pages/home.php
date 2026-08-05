@@ -1,9 +1,12 @@
 <?php
 
 /**
- * Template Name: Accueil
+ * Template Name: Bac à sable (à retirer avant livraison)
  *
- * Template de page natif. Son schéma de champs est dans `home.fields.php`.
+ * Gabarit d'expérimentation, antérieur au jeu de départ. Le gabarit « Accueil »
+ * livré avec le thème est désormais `accueil.php`.
+ *
+ * Son schéma de champs est dans `home.fields.php`.
  *
  * @package Ironframe
  */

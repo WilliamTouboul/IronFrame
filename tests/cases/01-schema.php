@@ -110,6 +110,29 @@ iron_test('Un répétable ne peut pas en contenir un autre', function () {
     iron_assert_true(isset($sous_champs['ok']), 'le sous-champ valide est conservé');
 });
 
+iron_test('Tous les gabarits livrés ont un schéma valide', function () {
+
+    $fichiers = glob(IRON_PATH . '/pages/*.fields.php');
+
+    iron_assert_true(count($fichiers) >= 4, 'le jeu de départ est présent');
+
+    foreach ($fichiers as $fichier) {
+
+        $nom      = basename($fichier, '.fields.php');
+        $template = 'pages/' . $nom . '.php';
+
+        iron_assert_true(file_exists(IRON_PATH . '/' . $template), sprintf('%s : le gabarit existe', $nom));
+
+        $schema = iron_get_schema($template);
+
+        iron_assert_true(count($schema) > 0, sprintf('%s : au moins un groupe', $nom));
+
+        foreach ($schema as $groupe) {
+            iron_assert_true(count($groupe['fields']) > 0, sprintf('%s : le groupe « %s » a des champs', $nom, $groupe['key']));
+        }
+    }
+});
+
 iron_test('Une liste de choix sans options est refusée', function () {
 
     $schema = _iron_normalize_schema([
