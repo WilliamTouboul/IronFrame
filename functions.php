@@ -22,7 +22,9 @@ $iron_modules = [
     'inc/fields/types.php',  // Brique 1 — registre des types de champs.
     'inc/fields/schema.php', // Brique 1 — découverte et validation des schémas.
     'inc/fields/store.php',  // Lecture / écriture des valeurs.
-    'inc/fields/api.php',    // Brique 3 — API de lecture côté template.
+    'inc/fields/api.php',       // Brique 3 — API de lecture côté template.
+    'inc/fields/revisions.php', // Historique des valeurs de champs.
+    'inc/fields/debug.php',     // Panneau de diagnostic, sous WP_DEBUG.
 
     // Brique 6 — options globales : les données qui n'appartiennent à aucune
     // page (coordonnées, réseaux sociaux, pied de page).
@@ -42,6 +44,7 @@ if (is_admin()) {
     $iron_modules[] = 'inc/fields/admin/validation.php'; // Champs obligatoires et messages.
     $iron_modules[] = 'inc/fields/admin/meta-box.php';   // Brique 2 — meta boxes et sauvegarde.
     $iron_modules[] = 'inc/fields/admin/assets.php';    // Brique 2 — CSS et JS d'admin.
+    $iron_modules[] = 'inc/fields/admin/columns.php';   // Colonne Template sur la liste des pages.
     $iron_modules[] = 'inc/options/admin.php';          // Brique 6 — écran des options globales.
     $iron_modules[] = 'inc/client/admin-ui.php';        // Brique 5 — épuration de l'admin.
 }

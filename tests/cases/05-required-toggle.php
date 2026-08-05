@@ -31,7 +31,11 @@ function iron_test_submit($page_id, array $values, array $shown = [], array $on 
         $_POST['iron_toggle'][$group] = '1';
     }
 
-    iron_save_fields($page_id, get_post($page_id));
+    // On passe par wp_update_post() plutôt que d'appeler iron_save_fields()
+    // directement : c'est le seul moyen de dérouler toute la chaîne du core,
+    // dont la création des révisions, qui a lieu sur `wp_after_insert_post`,
+    // tout à la fin du cycle d'enregistrement.
+    wp_update_post(['ID' => $page_id]);
 
     $_POST = [];
 }

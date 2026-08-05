@@ -173,6 +173,23 @@
         refresh(repeater);
     }
 
+    /**
+     * Une ligne qu'on vient d'ajouter et qui est encore vide se supprime sans
+     * question : demander confirmation pour rien apprend au client à cliquer
+     * « oui » sans lire, et la confirmation ne protège alors plus rien.
+     */
+    function rowIsEmpty(row) {
+        var champs = row.querySelectorAll('input[type="text"], input[type="url"], input[type="hidden"], textarea, select');
+
+        for (var i = 0; i < champs.length; i++) {
+            if ('' !== champs[i].value && '0' !== champs[i].value) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     function moveRow(row, direction) {
         var sibling = 'up' === direction
             ? row.previousElementSibling
@@ -218,6 +235,10 @@
         }
 
         if (button.hasAttribute('data-iron-repeater-remove')) {
+            if (!rowIsEmpty(row) && !window.confirm(l10n.confirmRemoveRow || 'Supprimer cette ligne ?')) {
+                return;
+            }
+
             row.remove();
         } else {
             moveRow(row, button.hasAttribute('data-iron-repeater-up') ? 'up' : 'down');

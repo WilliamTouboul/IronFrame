@@ -38,8 +38,9 @@ if (!function_exists('iron_enqueue_field_editor_assets')) {
         );
 
         wp_localize_script('iron-admin-fields', 'ironFieldsL10n', [
-            'frameTitle'  => __('Choisir une image', 'ironframe'),
-            'frameButton' => __('Utiliser cette image', 'ironframe'),
+            'frameTitle'      => __('Choisir une image', 'ironframe'),
+            'frameButton'     => __('Utiliser cette image', 'ironframe'),
+            'confirmRemoveRow' => __('Supprimer cette ligne et son contenu ?', 'ironframe'),
         ]);
     }
 }

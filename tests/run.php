@@ -219,6 +219,49 @@ if (!function_exists('iron_test_template')) {
     }
 }
 
+/**
+ * Rend le gabarit de test acceptable par WordPress, le temps de la suite.
+ *
+ * Sans cela, `wp_update_post()` compare `page_template` à la liste des
+ * templates enregistrés, n'y trouve pas le nôtre — il est volontairement à
+ * deux niveaux de profondeur pour rester invisible au client — et le remet
+ * silencieusement à « default », ce qui vide le schéma de la page.
+ *
+ * Ce filtre vit dans la suite de tests, jamais dans le thème.
+ */
+add_filter('theme_page_templates', function ($templates) {
+
+    $templates[iron_test_template()] = 'Ironframe — gabarit de test';
+
+    return $templates;
+});
+
+/**
+ * Déclare les champs du schéma de test comme révisionnables.
+ *
+ * Le thème ne parcourt que `pages/` ; le schéma de test vit ailleurs. On passe
+ * donc par le filtre prévu, ce qui le vérifie au passage.
+ *
+ * Le schéma est résolu depuis le chemin du gabarit et non depuis une page :
+ * créer une page ici déclencherait une révision, donc un appel à ce même
+ * filtre, donc une récursion.
+ */
+add_filter('iron_revisioned_meta_keys', function ($keys) {
+
+    foreach (iron_get_schema(iron_test_template()) as $group_key => $group) {
+
+        if (!empty($group['toggle'])) {
+            $keys[] = iron_group_toggle_key($group_key);
+        }
+
+        foreach ($group['fields'] as $field) {
+            $keys[] = $field['meta_key'];
+        }
+    }
+
+    return array_values(array_unique($keys));
+});
+
 if (!function_exists('iron_test_page')) {
     /**
      * Page de test, créée une fois et réutilisée.
