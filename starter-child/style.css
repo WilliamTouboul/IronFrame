@@ -1,0 +1,15 @@
+/*
+Theme Name: Ironframe — Projet
+Template: ironframe
+Author: Votre agence
+Description: Thème enfant d'Ironframe. C'est ici que vit tout ce qui est propre au projet : gabarits de pages, schémas de champs, réglages du site et feuilles de style. Le thème parent contient le moteur et ne doit jamais être modifié.
+Requires at least: 6.0
+Requires PHP: 7.4
+Version: 1.0.0
+Text Domain: ironframe-projet
+*/
+
+/* -------------------------------------------------------------------------- */
+/* Ce fichier est chargé en DERNIER, après les styles du parent.              */
+/* Pour un projet un peu conséquent, préférez assets/style/main.css.          */
+/* -------------------------------------------------------------------------- */

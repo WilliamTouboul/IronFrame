@@ -80,6 +80,33 @@ if (!function_exists('iron_debug_current_page')) {
     }
 }
 
+if (!function_exists('_iron_debug_relative_path')) {
+    /**
+     * Raccourcit un chemin absolu en « dossier-du-thème/chemin/relatif ».
+     *
+     * @param string $path
+     * @return string
+     */
+    function _iron_debug_relative_path($path)
+    {
+        $real = realpath($path);
+
+        if (!$real) {
+            return (string) $path;
+        }
+
+        foreach (iron_theme_roots() as $root) {
+            $root_real = realpath($root);
+
+            if ($root_real && 0 === strpos($real, $root_real)) {
+                return basename($root_real) . str_replace('\\', '/', substr($real, strlen($root_real)));
+            }
+        }
+
+        return (string) $path;
+    }
+}
+
 if (!function_exists('iron_debug_admin_bar')) {
     /**
      * @param WP_Admin_Bar $bar
@@ -113,6 +140,18 @@ if (!function_exists('iron_debug_admin_bar')) {
             ]);
 
             return;
+        }
+
+        // Quel fichier sert réellement — la question qui se pose dès qu'un
+        // thème enfant redéfinit un gabarit du moteur.
+        $fichier = iron_schema_file_for_template($template);
+
+        if ('' !== $fichier) {
+            $bar->add_node([
+                'id'     => 'iron-debug-source',
+                'parent' => 'iron-debug',
+                'title'  => 'Schéma lu dans : ' . _iron_debug_relative_path($fichier),
+            ]);
         }
 
         foreach ($schema as $group_key => $group) {

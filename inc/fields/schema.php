@@ -107,24 +107,15 @@ if (!function_exists('iron_schema_file_for_template')) {
             return '';
         }
 
-        $relative = preg_replace('/\.php$/', '.fields.php', $template);
-        $path     = IRON_PATH . '/' . ltrim($relative, '/');
+        // L'enfant l'emporte sur le parent : un projet peut redéfinir le schéma
+        // d'un gabarit livré sans toucher au moteur.
+        $path = iron_locate(preg_replace('/\.php$/', '.fields.php', $template));
 
-        if (!file_exists($path)) {
+        if ('' === $path || !iron_path_is_inside_theme($path)) {
             return '';
         }
 
-        // Le nom du template vient d'une meta, donc potentiellement d'une
-        // écriture directe en base. On vérifie que le fichier résolu est bien
-        // à l'intérieur du thème.
-        $real  = realpath($path);
-        $theme = realpath(IRON_PATH);
-
-        if (!$real || !$theme || 0 !== strpos($real, $theme)) {
-            return '';
-        }
-
-        return $real;
+        return realpath($path);
     }
 }
 

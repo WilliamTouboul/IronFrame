@@ -19,9 +19,9 @@ if (!function_exists('iron_asset_version')) {
      */
     function iron_asset_version($relative_path)
     {
-        $full_path = IRON_PATH . '/' . ltrim($relative_path, '/');
+        $full_path = iron_locate($relative_path);
 
-        return file_exists($full_path)
+        return '' !== $full_path
             ? (string) filemtime($full_path)
             : IRON_VERSION;
     }
@@ -36,45 +36,65 @@ if (!function_exists('iron_enqueue_assets')) {
      */
     function iron_enqueue_assets()
     {
-        // Reset — c'est le style.css à la racine du thème.
+        /*
+         * Le reset vient toujours du moteur ; le reste vient du projet dès
+         * qu'il le fournit. Un thème enfant qui pose son propre `main.css`
+         * remplace donc celui du parent, sans avoir à désinscrire quoi que ce
+         * soit.
+         */
         wp_enqueue_style(
             'iron-reset',
-            get_stylesheet_uri(),
+            IRON_URI . '/style.css',
             [],
             iron_asset_version('style.css')
         );
 
-        wp_enqueue_style(
-            'iron-variables',
-            IRON_URI . '/assets/style/variable.css',
-            ['iron-reset'],
-            iron_asset_version('assets/style/variable.css')
-        );
+        $iron_styles = [
+            'iron-variables' => 'assets/style/variable.css',
+            'iron-fonts'     => 'assets/style/fonts.css',
+            'iron-main'      => 'assets/style/main.css',
+        ];
 
-        wp_enqueue_style(
-            'iron-fonts',
-            IRON_URI . '/assets/style/fonts.css',
-            ['iron-variables'],
-            iron_asset_version('assets/style/fonts.css')
-        );
+        $iron_depend = 'iron-reset';
 
-        wp_enqueue_style(
-            'iron-main',
-            IRON_URI . '/assets/style/main.css',
-            ['iron-fonts'],
-            iron_asset_version('assets/style/main.css')
-        );
+        foreach ($iron_styles as $iron_handle => $iron_file) {
+
+            $iron_uri = iron_locate_uri($iron_file);
+
+            if ('' === $iron_uri) {
+                continue;
+            }
+
+            wp_enqueue_style($iron_handle, $iron_uri, [$iron_depend], iron_asset_version($iron_file));
+
+            $iron_depend = $iron_handle;
+        }
+
+        // Si le thème enfant déclare une feuille de style à sa racine, elle
+        // passe en dernier : c'est la convention que tout développeur attend.
+        if (get_stylesheet_directory() !== get_template_directory()) {
+            wp_enqueue_style(
+                'iron-child',
+                get_stylesheet_uri(),
+                [$iron_depend],
+                iron_asset_version('style.css')
+            );
+        }
 
         // Aucune librairie JS tierce n'est chargée par défaut. Le thème est
         // vendu comme un socle sans dépendance externe : le développeur qui
         // reprend le projet ajoute ici ce dont il a besoin, en local.
-        wp_enqueue_script(
-            'iron-main',
-            IRON_URI . '/assets/js/main.js',
-            [],
-            iron_asset_version('assets/js/main.js'),
-            true
-        );
+        $iron_script = iron_locate_uri('assets/js/main.js');
+
+        if ('' !== $iron_script) {
+            wp_enqueue_script(
+                'iron-main',
+                $iron_script,
+                [],
+                iron_asset_version('assets/js/main.js'),
+                true
+            );
+        }
     }
 }
 add_action('wp_enqueue_scripts', 'iron_enqueue_assets');

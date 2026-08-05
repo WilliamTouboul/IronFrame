@@ -46,7 +46,7 @@ if (!function_exists('iron_revisioned_meta_keys')) {
 
         $keys = [];
 
-        foreach ((array) glob(IRON_PATH . '/pages/*.fields.php') as $file) {
+        foreach (iron_glob('pages/*.fields.php') as $file) {
 
             $template = 'pages/' . preg_replace('/\.fields\.php$/', '.php', basename($file));
 

@@ -30,7 +30,9 @@ if (!function_exists('iron_get_options_schema')) {
             return $schema;
         }
 
-        $files = glob(IRON_PATH . '/options/*.fields.php');
+        // Enfant puis parent : un fichier du projet portant le même nom qu'un
+        // fichier livré le remplace entièrement.
+        $files = iron_glob('options/*.fields.php');
 
         if (!$files) {
             $schema = [];

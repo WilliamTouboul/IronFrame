@@ -11,10 +11,23 @@
 defined('ABSPATH') || exit;
 
 define('IRON_VERSION', '1.0.0');
-define('IRON_PATH', get_stylesheet_directory());
-define('IRON_URI', get_stylesheet_directory_uri());
+
+/*
+ * IRON_PATH désigne toujours le **moteur**, c'est-à-dire le thème parent :
+ * c'est lui qui contient `inc/` et qui se met à jour.
+ *
+ * Le projet — gabarits, schémas, styles — vit dans le thème enfant, et se
+ * résout par `iron_locate()`. Sans thème enfant, les deux se confondent et le
+ * comportement est celui d'avant la séparation.
+ */
+define('IRON_PATH', get_template_directory());
+define('IRON_URI', get_template_directory_uri());
+
+define('IRON_PROJECT_PATH', get_stylesheet_directory());
+define('IRON_PROJECT_URI', get_stylesheet_directory_uri());
 
 $iron_modules = [
+    'inc/paths.php',         // Résolution enfant / parent. À charger en premier.
     'inc/theme-setup.php',   // Supports du thème, tailles d'images, textdomain.
     'inc/cleanup.php',       // Nettoyage du <head> et désactivation des flux.
     'inc/assets.php',        // Chargement des CSS et JS.
