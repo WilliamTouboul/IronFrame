@@ -1,0 +1,7 @@
+{
+  "version": "1.1.0",
+  "package": "https://exemple.fr/telechargements/ironframe-1.1.0.zip",
+  "url": "https://exemple.fr/ironframe/journal-des-versions",
+  "requires": "6.0",
+  "requires_php": "7.4"
+}

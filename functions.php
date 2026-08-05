@@ -32,6 +32,7 @@ $iron_modules = [
     'inc/cleanup.php',       // Nettoyage du <head> et désactivation des flux.
     'inc/assets.php',        // Chargement des CSS et JS.
     'inc/layout.php',        // Enveloppe de mise en page des templates.
+    'inc/updates.php',       // Client de mise à jour du moteur.
     'inc/fields/types.php',  // Brique 1 — registre des types de champs.
     'inc/fields/schema.php', // Brique 1 — découverte et validation des schémas.
     'inc/fields/store.php',  // Lecture / écriture des valeurs.
