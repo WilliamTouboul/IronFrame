@@ -12,6 +12,9 @@ desktop.ini
 *.sublime-workspace
 *.code-workspace
 
+# Archives de distribution, produites par bin/build-release.php
+dist/
+
 # Sauvegardes et temporaires
 *.bak
 *.orig
