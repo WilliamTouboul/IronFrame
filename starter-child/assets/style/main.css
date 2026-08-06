@@ -1,1 +1,9 @@
-/* Main.css */
+/*
+ * Feuille principale du projet.
+ *
+ * Chargée après les variables et les polices, avant le style.css du thème.
+ * C'est ici que va l'essentiel de la mise en forme.
+ *
+ * Les gabarits livrés utilisent une convention BEM et n'ont aucun style : les
+ * classes hero__title, carte__prix, site-nav__link n'attendent que vous.
+ */

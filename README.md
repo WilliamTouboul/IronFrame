@@ -101,10 +101,10 @@ Les cinq types de champs disponibles sont `text`, `textarea`, `image`, `link` et
 Installation détaillée, déclaration des champs, référence de l'API, listes
 répétables, réglages du site et rôle client :
 
-<!-- TODO : remplacer par l'URL publique de la documentation. -->
-**https://ironframe.example/docs**
+**https://ironframe.fr**
 
-Le présent fichier n'est qu'un panneau d'orientation.
+Le présent fichier n'est qu'un panneau d'orientation. Le pourquoi des choix de
+conception est dans [MANIFESTE.md](MANIFESTE.md).
 
 ---
 

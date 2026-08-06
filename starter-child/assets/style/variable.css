@@ -1,1 +1,10 @@
-/* Variable.css */
+/*
+ * Variables CSS du projet — couleurs, espacements, rayons, ombres.
+ *
+ * Chargée en premier, juste après le reset du moteur. Tout ce qui est déclaré
+ * ici est donc disponible dans les feuilles suivantes.
+ */
+
+:root {
+    /* --couleur-principale: #000; */
+}

@@ -176,8 +176,13 @@ if ($fictif) {
     printf("            Relancez avec : php bin/build-release.php https://votre-site.fr/telechargements/\n");
 }
 
-$readme = file_get_contents($racine . '/README.md');
+// `.example` et `.invalid` sont réservés à la documentation : leur présence
+// signale une adresse restée à l'état d'exemple.
+foreach (['README.md', 'MANIFESTE.md'] as $document) {
 
-if (false !== strpos($readme, 'ironframe.example')) {
-    printf("\nATTENTION : README.md contient encore l'URL de documentation fictive.\n");
+    $contenu = file_get_contents($racine . '/' . $document);
+
+    if (preg_match('/https?:\/\/[^\s)]*\.(example|invalid)\b/', $contenu, $m)) {
+        printf("\nATTENTION : %s contient une adresse fictive — %s\n", $document, $m[0]);
+    }
 }

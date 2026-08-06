@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Ironframe 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-04 11:50+0000\n"
+"POT-Creation-Date: 2026-08-06 12:04+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -18,32 +18,57 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Domain: ironframe\n"
 
-#: inc/fields/admin/render.php:300
+#: inc/fields/admin/columns.php:76
+msgid "%s (introuvable)"
+msgstr ""
+
+#: starter-child/pages/contact.php:89
+msgid "Accès"
+msgstr ""
+
+#: inc/fields/admin/render.php:366
 msgid "Adresse"
 msgstr ""
 
-#: inc/fields/schema.php:310
+#: inc/fields/schema.php:393
+msgid "Afficher cette section sur le site"
+msgstr ""
+
+#: inc/fields/schema.php:357
 msgid "Ajouter une ligne"
+msgstr ""
+
+#: inc/fields/admin/render.php:145
+msgid "Aucun choix"
 msgstr ""
 
 #: inc/cleanup.php:35
 msgid "Aucun flux disponible, merci de consulter la page d'accueil."
 msgstr ""
 
-#: inc/fields/admin/render.php:163
+#: inc/fields/admin/render.php:237
 msgid "Aucune ligne pour le moment."
 msgstr ""
 
-#: inc/client/admin-ui.php:217
+#: inc/client/admin-ui.php:267
 msgid "Aucune page pour le moment."
+msgstr ""
+
+#: inc/fields/admin/validation.php:300
+#: inc/options/admin.php:83
+msgid "Ces champs sont obligatoires et n'ont pas été enregistrés vides. Leur valeur précédente a été conservée."
 msgstr ""
 
 #: inc/options/admin.php:75
 msgid "Ces informations sont utilisées partout sur le site. Les modifier ici les met à jour sur toutes les pages."
 msgstr ""
 
+#: inc/fields/admin/render.php:83
+msgid "Champ obligatoire"
+msgstr ""
+
 #: inc/fields/admin/assets.php:41
-#: inc/fields/admin/render.php:118
+#: inc/fields/admin/render.php:192
 msgid "Choisir une image"
 msgstr ""
 
@@ -51,39 +76,51 @@ msgstr ""
 msgid "Client"
 msgstr ""
 
-#: inc/fields/admin/render.php:319
+#: inc/fields/admin/render.php:385
 msgid "Dans la même fenêtre"
 msgstr ""
 
-#: inc/fields/admin/render.php:322
+#: inc/fields/admin/render.php:388
 msgid "Dans un nouvel onglet"
 msgstr ""
 
-#: inc/fields/admin/render.php:204
+#: starter-child/pages/mentions-legales.php:26
+msgid "Dernière mise à jour : %s"
+msgstr ""
+
+#: inc/fields/admin/render.php:278
 msgid "Descendre cette ligne"
 msgstr ""
 
-#: inc/client/admin-ui.php:138
+#: inc/client/admin-ui.php:188
 msgid "Enregistrer"
 msgstr ""
 
-#: inc/client/admin-ui.php:165
+#: inc/client/admin-ui.php:215
 msgid "Enregistrer les modifications"
 msgstr ""
 
-#: inc/options/admin.php:107
+#: inc/options/admin.php:121
 msgid "Enregistrer les réglages"
+msgstr ""
+
+#: starter-child/pages/contact.php:82
+msgid "Horaires"
 msgstr ""
 
 #: inc/fields/types.php:54
 msgid "Image"
 msgstr ""
 
+#: starter-child/pages/contact.php:78
+msgid "Informations pratiques"
+msgstr ""
+
 #: 404.php:18
 msgid "La page que vous cherchez n'existe pas ou a été déplacée."
 msgstr ""
 
-#: inc/client/admin-ui.php:194
+#: inc/client/admin-ui.php:244
 msgid "Les pages du site"
 msgstr ""
 
@@ -91,19 +128,35 @@ msgstr ""
 msgid "Lien"
 msgstr ""
 
-#: inc/fields/schema.php:313
+#: inc/fields/schema.php:360
 msgid "Ligne"
 msgstr ""
 
-#: inc/fields/types.php:84
+#: inc/fields/types.php:83
+msgid "Liste de choix"
+msgstr ""
+
+#: inc/fields/types.php:96
 msgid "Liste répétable"
 msgstr ""
 
-#: inc/fields/admin/render.php:202
+#: inc/fields/admin/render.php:276
 msgid "Monter cette ligne"
 msgstr ""
 
-#: inc/fields/admin/render.php:313
+#: starter-child/templates/header_on_site.php:28
+msgid "Navigation principale"
+msgstr ""
+
+#: starter-child/pages/contact.php:39
+msgid "Nos coordonnées"
+msgstr ""
+
+#: starter-child/pages/contact.php:103
+msgid "Nous écrire"
+msgstr ""
+
+#: inc/fields/admin/render.php:379
 msgid "Ouverture"
 msgstr ""
 
@@ -111,7 +164,7 @@ msgstr ""
 msgid "Page introuvable"
 msgstr ""
 
-#: inc/fields/admin/render.php:121
+#: inc/fields/admin/render.php:195
 msgid "Retirer"
 msgstr ""
 
@@ -125,19 +178,32 @@ msgstr ""
 msgid "Réglages du site"
 msgstr ""
 
-#: inc/options/admin.php:80
+#: inc/options/admin.php:89
 msgid "Réglages enregistrés."
 msgstr ""
 
-#: inc/fields/admin/render.php:206
+#: starter-child/pages/contact.php:66
+msgid "Réseaux sociaux"
+msgstr ""
+
+#: inc/fields/admin/render.php:280
 msgid "Supprimer"
+msgstr ""
+
+#: inc/fields/admin/assets.php:43
+msgid "Supprimer cette ligne et son contenu ?"
+msgstr ""
+
+#: inc/fields/admin/columns.php:35
+#: inc/fields/admin/columns.php:42
+msgid "Template"
 msgstr ""
 
 #: inc/fields/types.php:35
 msgid "Texte court"
 msgstr ""
 
-#: inc/fields/admin/render.php:288
+#: inc/fields/admin/render.php:354
 msgid "Texte du lien"
 msgstr ""
 
@@ -149,15 +215,15 @@ msgstr ""
 msgid "Utiliser cette image"
 msgstr ""
 
-#: inc/client/admin-ui.php:163
+#: inc/client/admin-ui.php:213
 msgid "Vos modifications ne seront visibles sur le site qu'après enregistrement."
 msgstr ""
 
 #: inc/options/admin.php:67
-#: inc/options/admin.php:168
+#: inc/options/admin.php:175
 msgid "Vous n'avez pas les droits nécessaires."
 msgstr ""
 
-#: inc/client/admin-ui.php:230
+#: inc/client/admin-ui.php:280
 msgid "voir"
 msgstr ""

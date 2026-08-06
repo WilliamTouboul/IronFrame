@@ -1,1 +1,8 @@
-/* Fonts.css */
+/*
+ * Polices du projet : déclarations @font-face, ou import d'un service tiers.
+ *
+ * Chargée après les variables, avant la feuille principale.
+ *
+ * Rappel : héberger ses polices plutôt que de les charger depuis un service
+ * externe évite une requête vers un tiers, donc une question de conformité.
+ */

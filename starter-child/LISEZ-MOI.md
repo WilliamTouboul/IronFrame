@@ -9,7 +9,12 @@ Ce dossier est un **modèle**. Il ne fonctionne pas là où il se trouve.
 3. Activez-le dans **Apparence → Thèmes**. Vous activez l'**enfant**, jamais le
    parent.
 
-C'est tout. Le moteur est déjà là.
+C'est tout. Le moteur est déjà là, et quatre gabarits d'exemple sont dans
+`pages/`.
+
+> **Si vous renommez le dossier du moteur**, ouvrez `style.css` et corrigez la
+> ligne `Template:` en conséquence. C'est elle qui relie l'enfant au parent :
+> si les deux ne correspondent pas, WordPress refuse d'activer le thème.
 
 ## Où va quoi
 
